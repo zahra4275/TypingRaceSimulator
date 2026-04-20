@@ -25,7 +25,7 @@ public class Typist
     boolean burntout = false;
     int burnoutTurnsLeft = 0;
     double accuracy;
-    boolean missTyped = false;
+    boolean misTyped = false;
 
 
     // Constructor of class Typist
@@ -134,14 +134,14 @@ public class Typist
         } 
     }
 
-    public boolean getMissTyped()
+    public boolean getMisTyped()
     {
-        return missTyped;
+        return misTyped;
     }
 
-    public void setMissTyped(boolean ifMissTyped)
+    public void setMisTyped(boolean ifMisTyped)
     {
-        missTyped = ifMissTyped;
+        misTyped = ifMisTyped;
     }
 
     /**
