@@ -105,7 +105,7 @@ public class TypingRace
         }
 
         // TODO (Task 2a): Print the winner's name here
-
+        
     }
 
     /**
@@ -158,8 +158,7 @@ public class TypingRace
      */
     private boolean raceFinishedBy(Typist theTypist)
     {
-        // Ty was confident this condition was correct
-        if (theTypist.getProgress() == passageLength)
+        if (theTypist.getProgress() >= passageLength)
         {
             return true;
         }
@@ -257,17 +256,6 @@ public class TypingRace
             System.out.print(aChar);
             i = i + 1;
         }
-    }
-
-    public static void main(String[] args) {
-        TypingRace race = new TypingRace(30);
-        Typist typist1 = new Typist('\u2460', "TURBOFINGERS", 0.85);
-        Typist typist2 = new Typist('\u2461', "QWERT_QUEEN", 0.60);
-        Typist typist3 = new Typist('\u2462', "HUNT_N_PECK", 0.30);
-        race.addTypist(typist1, 1);
-        race.addTypist(typist2, 2);
-        race.addTypist(typist3, 3);
-        race.startRace();
     }
     
 }
