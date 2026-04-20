@@ -129,6 +129,10 @@ public class TypingRace
             theTypist.recoverFromBurnout();
             return;
         }
+        if(theTypist.missTyped){
+            theTypist.setMissTyped(false);
+            return;
+        }
 
         // Attempt to type a character
         if (Math.random() < theTypist.getAccuracy())
@@ -137,14 +141,15 @@ public class TypingRace
         }
 
         // Mistype check — the probability should reflect the typist's accuracy
-        if (Math.random() < theTypist.getAccuracy() * MISTYPE_BASE_CHANCE)
+        if ((Math.random() < theTypist.getAccuracy() * MISTYPE_BASE_CHANCE)&&(!theTypist.isBurntOut()))
         {
             theTypist.slideBack(SLIDE_BACK_AMOUNT);
+            theTypist.setMissTyped(true);
         }
 
         // Burnout check — pushing too hard increases burnout risk
         // (probability scales with accuracy squared, capped at ~0.05)
-        if (Math.random() < 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy())
+        if ((Math.random() < 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy())&&(!theTypist.getMissTyped()))
         {
             theTypist.burnOut(BURNOUT_DURATION);
         }
@@ -224,6 +229,13 @@ public class TypingRace
             spacesAfter--; // symbol + ~ together take two characters
         }
 
+        //Append [<] when the typist misstypes 
+        if(theTypist.getMissTyped())
+        {
+            System.out.print("<");
+            spacesAfter--; // symbol + < takes two characters
+        }
+
         multiplePrint(' ', spacesAfter);
         System.out.print('|');
         System.out.print(' ');
@@ -234,6 +246,12 @@ public class TypingRace
             System.out.print(theTypist.getName()
                 + " (Accuracy: " + theTypist.getAccuracy() + ")"
                 + " BURNT OUT (" + theTypist.getBurnoutTurnsRemaining() + " turns)");
+        }
+        else if(theTypist.getMissTyped())
+        {
+            System.out.print(theTypist.getName()
+                + " (Accuracy: " + theTypist.getAccuracy() + ")"
+                + " JUST MISSTYPED");
         }
         else
         {
@@ -261,7 +279,7 @@ public class TypingRace
     public static void main(String[] args) {
         TypingRace race = new TypingRace(30);
         Typist typist1 = new Typist('\u2460', "TURBOFINGERS", 0.85);
-        Typist typist2 = new Typist('\u2461', "QWERT_QUEEN", 0.60);
+        Typist typist2 = new Typist('\u2461', "QWERTY_QUEEN", 0.60);
         Typist typist3 = new Typist('\u2462', "HUNT_N_PECK", 0.30);
         race.addTypist(typist1, 1);
         race.addTypist(typist2, 2);
