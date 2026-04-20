@@ -268,11 +268,8 @@ public class TypingRace
      */
     private void multiplePrint(char aChar, int times)
     {
-        int i = 0;
-        while (i < times)
-        {
+        for(int i=0; i<times; i++){
             System.out.print(aChar);
-            i = i + 1;
         }
     }
 
