@@ -76,6 +76,9 @@ public class TypingRace
     public void startRace()
     {
         boolean finished = false;
+        Typist winnerName = null;
+        double oldAccuracy = 0.0;
+        final double INCREASE_ACCURACY = 1.02;
 
         // Reset all typists to the start of the passage
         seat1Typist.resetToStart();
@@ -93,9 +96,26 @@ public class TypingRace
             printRace();
 
             // Check if any typist has finished the passage
-            if ( raceFinishedBy(seat1Typist) || raceFinishedBy(seat2Typist) || raceFinishedBy(seat3Typist) )
+            if ( raceFinishedBy(seat1Typist))
             {
                 finished = true;
+                winnerName = seat1Typist; 
+                oldAccuracy = seat1Typist.getAccuracy();
+                seat1Typist.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
+            } 
+            else if(raceFinishedBy(seat2Typist))
+            {
+                finished = true;
+                winnerName = seat2Typist;
+                oldAccuracy = seat2Typist.getAccuracy(); 
+                seat2Typist.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
+            }
+            else if(raceFinishedBy(seat3Typist))
+            {
+                finished = true;
+                winnerName = seat3Typist; 
+                oldAccuracy = seat3Typist.getAccuracy();
+                seat3Typist.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
             }
 
             // Wait 200ms between turns so the animation is visible
@@ -105,7 +125,9 @@ public class TypingRace
         }
 
         // TODO (Task 2a): Print the winner's name here
-        
+        System.out.println("And the Winner is... " + winnerName.typistName);
+        System.out.println("Final accuracy: " + winnerName.getAccuracy() + " (improved from " + oldAccuracy + " )");
+
     }
 
     /**
@@ -129,9 +151,10 @@ public class TypingRace
             theTypist.recoverFromBurnout();
             return;
         }
-        if(theTypist.missTyped){
-            theTypist.setMissTyped(false);
-            return;
+        if(theTypist.misTyped){
+
+            //mistype only lasts one turn, so it resets at the next turn
+            theTypist.setMisTyped(false);
         }
 
         // Attempt to type a character
@@ -144,12 +167,12 @@ public class TypingRace
         if ((Math.random() < theTypist.getAccuracy() * MISTYPE_BASE_CHANCE)&&(!theTypist.isBurntOut()))
         {
             theTypist.slideBack(SLIDE_BACK_AMOUNT);
-            theTypist.setMissTyped(true);
+            theTypist.setMisTyped(true);
         }
 
         // Burnout check — pushing too hard increases burnout risk
         // (probability scales with accuracy squared, capped at ~0.05)
-        if ((Math.random() < 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy())&&(!theTypist.getMissTyped()))
+        if ((Math.random() < 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy())&&(!theTypist.getMisTyped()))
         {
             theTypist.burnOut(BURNOUT_DURATION);
         }
@@ -163,14 +186,7 @@ public class TypingRace
      */
     private boolean raceFinishedBy(Typist theTypist)
     {
-        if (theTypist.getProgress() >= passageLength)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return theTypist.getProgress() >= passageLength;
     }
 
     /**
@@ -229,8 +245,8 @@ public class TypingRace
             spacesAfter--; // symbol + ~ together take two characters
         }
 
-        //Append [<] when the typist misstypes 
-        if(theTypist.getMissTyped())
+        //Append < when the typist misstypes 
+        if(theTypist.getMisTyped())
         {
             System.out.print("<");
             spacesAfter--; // symbol + < takes two characters
@@ -247,11 +263,11 @@ public class TypingRace
                 + " (Accuracy: " + theTypist.getAccuracy() + ")"
                 + " BURNT OUT (" + theTypist.getBurnoutTurnsRemaining() + " turns)");
         }
-        else if(theTypist.getMissTyped())
+        else if(theTypist.getMisTyped())
         {
             System.out.print(theTypist.getName()
                 + " (Accuracy: " + theTypist.getAccuracy() + ")"
-                + " JUST MISSTYPED");
+                + " JUST MISTYPED");
         }
         else
         {
@@ -275,7 +291,7 @@ public class TypingRace
 
     public static void main(String[] args) {
         TypingRace race = new TypingRace(30);
-        Typist typist1 = new Typist('\u2460', "TURBOFINGERS", 0.85);
+        Typist typist1 = new Typist('\u2460', "TURBOFINGERS", 0.55);
         Typist typist2 = new Typist('\u2461', "QWERTY_QUEEN", 0.60);
         Typist typist3 = new Typist('\u2462', "HUNT_N_PECK", 0.30);
         race.addTypist(typist1, 1);
@@ -284,5 +300,4 @@ public class TypingRace
         race.startRace();
     }
 
-    
 }
