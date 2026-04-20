@@ -78,9 +78,9 @@ public class TypingRace
         boolean finished = false;
 
         // Reset all typists to the start of the passage
-        // (Ty was in a hurry here)
         seat1Typist.resetToStart();
         seat2Typist.resetToStart();
+        seat3Typist.resetToStart();
 
         while (!finished)
         {
@@ -105,6 +105,7 @@ public class TypingRace
         }
 
         // TODO (Task 2a): Print the winner's name here
+
     }
 
     /**
@@ -257,4 +258,16 @@ public class TypingRace
             i = i + 1;
         }
     }
+
+    public static void main(String[] args) {
+        TypingRace race = new TypingRace(30);
+        Typist typist1 = new Typist('\u2460', "TURBOFINGERS", 0.85);
+        Typist typist2 = new Typist('\u2461', "QWERT_QUEEN", 0.60);
+        Typist typist3 = new Typist('\u2462', "HUNT_N_PECK", 0.30);
+        race.addTypist(typist1, 1);
+        race.addTypist(typist2, 2);
+        race.addTypist(typist3, 3);
+        race.startRace();
+    }
+    
 }
