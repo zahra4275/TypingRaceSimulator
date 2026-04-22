@@ -1,6 +1,8 @@
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
@@ -14,9 +16,6 @@ public class RaceConfigGUI
 {
     private JFrame configFrame;
     private JPanel cardPanel; // Panel for card layout that switches from race configuration to customising typists
-
-    // private final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Customised"};
-    // private final String[] DIFFICULTY_OPTIONS = {"Autocorrect", "Caffeine mode" ,"Night shift"};
 
     public RaceConfigGUI()
     {
@@ -53,6 +52,9 @@ public class RaceConfigGUI
         // Option to choose difficulty modifiers, can choose more than one option.
         chooseDiffModifiers(configPanel);
 
+        JButton nextButton = new JButton("Next");
+        configPanel.add(nextButton);
+
         // Adds the race configuration panel to the panel that has card layout.
         cardPanel.add(configPanel);
 
@@ -62,6 +64,7 @@ public class RaceConfigGUI
      * Displays the options for passage selection using a comboBox. Users can only choose one option.
      * 
      * @param configPanel the panel that will display the race configuration options.
+     * @param PASSAGE_OPTIONS Array of options for passage length.
      */
     private void choosePassage(JPanel configPanel, String[] PASSAGE_OPTIONS){
         JLabel passageLabel = new JLabel("Choose passage length:");
@@ -145,10 +148,19 @@ public class RaceConfigGUI
         // Display accessory options
         chooseAccessory(customisePanel, ACCESSORY_OPTIONS);
 
+        JButton nextButton = new JButton("Next");
+        customisePanel.add(nextButton);
+
         cardPanel.add(panelScrollPane);
 
     }
 
+    /**
+     * Displays options for typing style. Users can only choose one option.
+     * 
+     * @param customisePanel panel that holds all components for customising typists.
+     * @param typingStyleOptions array that holds all options for typing style.
+     */
     private void chooseTypingStyle(JPanel customisePanel, String[] typingStyleOptions){
         JLabel typingLabel = new JLabel("Choose typing style:");
         typingLabel.setBorder(new EmptyBorder(10,0,10,0));
@@ -160,6 +172,12 @@ public class RaceConfigGUI
         customisePanel.add(styleSelect);
     }
 
+    /**
+     * Displays options for keyboard type. Users can only choose one option.
+     * 
+     * @param customisePanel panel that holds all components for customising typists.
+     * @param typingStyleOptions array that holds all keyboard types, the user can choose.
+     */
     private void chooseKeyboardType(JPanel customisePanel, String[] KEYBOARD_OPTIONS){
         JLabel keyboardLabel = new JLabel("Choose your keyboard type:");
         keyboardLabel.setBorder(new EmptyBorder(10,0,10,0));
@@ -171,6 +189,12 @@ public class RaceConfigGUI
         customisePanel.add(keyboardSelect);
     }
 
+    /**
+     * Displays options for typist's symbol. Users can only choose one option.
+     * 
+     * @param customisePanel panel that holds all components for customising typists.
+     * @param typingStyleOptions array that holds all the symbols the user can choose from.
+     */
     private void chooseSymbol(JPanel customisePanel, String[] SYMBOL_OPTIONS){
         JLabel symbolLabel = new JLabel("Choose your symbol:");
         symbolLabel.setBorder(new EmptyBorder(10,0,10,0));
@@ -182,17 +206,35 @@ public class RaceConfigGUI
         customisePanel.add(symbolSelect);
     }
 
+    /**
+     * Displays options for colour.
+     * 
+     * @param customisePanel panel that holds all components for customising typists.
+     */
     private void chooseColour(JPanel customisePanel){
-        JLabel colourLabel = new JLabel("Choose you colour:");
+        JLabel colourLabel = new JLabel("Choose your colour:");
         colourLabel.setBorder(new EmptyBorder(10,0,10,0));
         colourLabel.setFont(new Font("Arial", Font.PLAIN, 15));
         customisePanel.add(colourLabel);
 
-        JColorChooser colour = new JColorChooser();
-        customisePanel.add(colour);
+        JButton colourButton = new JButton("Choose a colour");
+        colourButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                Color chosenColour = JColorChooser.showDialog(null, "Pick a colour",  Color.WHITE);
+            }
+        });
+
+        customisePanel.add(colourButton);
 
     }
 
+    /**
+     * Displays options for accessories. Users can only choose one option.
+     * 
+     * @param customisePanel panel that holds all components for customising typists.
+     * @param typingStyleOptions array that holds all accessories the user can choose from.
+     */
     private void chooseAccessory(JPanel customisePanel, String[] ACCESSORIES_OPTIONS){
         JLabel accLabel = new JLabel("Choose your accessories:");
         accLabel.setBorder(new EmptyBorder(10,0,10,0));
