@@ -38,7 +38,31 @@ public class RaceConfigGUI
         BoxLayout boxLayoutManager = new BoxLayout(configPanel, BoxLayout.Y_AXIS);
         configPanel.setLayout(boxLayoutManager);
 
+        JLabel titleLabel = new JLabel("Race Configuration");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        titleLabel.setBorder(new EmptyBorder(10,0,10,0));
+        configPanel.add(titleLabel);
+
         // Option to choose passage length from pre-defined list.
+        choosePassage(configPanel);
+
+        // Option to choose how many typists from a slider (max-6, min-2).
+        chooseSeatCount(configPanel);
+
+        // Option to choose difficulty modifiers, can choose more than one option.
+        chooseDiffModifiers(configPanel);
+
+        // Adds the race configuration panel to the panel that has card layout.
+        cardPanel.add(configPanel);
+
+    }
+
+    /**
+     * Displays the options for passage selection using a comboBox. Users can only choose one option.
+     * 
+     * @param configPanel the panel that will display the race configuration options.
+     */
+    private void choosePassage(JPanel configPanel){
         JLabel passageLabel = new JLabel("Choose passage length");
         passageLabel.setBorder(new EmptyBorder(10,0,10,0));
         passageLabel.setFont(new Font("Arial", Font.PLAIN, 20));
@@ -46,8 +70,14 @@ public class RaceConfigGUI
         JComboBox<String> passageSelect = new JComboBox<>(PASSAGE_OPTIONS);
         passageSelect.setBackground(Color.WHITE);
         configPanel.add(passageSelect);
+    }
 
-        // Option to choose how many typists from a slider (max-6, min-2).
+    /**
+     * Displays a slider so user can choose how many typists. Users can only choose one option.
+     * 
+     * @param configPanel the panel that will display the race configuration options.
+     */
+    private void chooseSeatCount(JPanel configPanel){
         JLabel countLabel = new JLabel("How many typists?");
         countLabel.setBorder(new EmptyBorder(10,0,10,0));
         countLabel.setFont(new Font("Arial", Font.PLAIN, 20));
@@ -60,8 +90,14 @@ public class RaceConfigGUI
         seatSlider.setPaintLabels(true);
         seatSlider.setPaintTicks(true);
         configPanel.add(seatSlider);
+    }
 
-        // Option to choose difficulty modifiers, can choose more than one option.
+    /**
+     * Displays the options for choosing difficulty modifiers. Users can choose multiple options.
+     * 
+     * @param configPanel the panel that will display the race configuration options.
+     */
+    private void chooseDiffModifiers(JPanel configPanel){
         JLabel difficultyLabel = new JLabel("Choose difficulty modifiers.");
         difficultyLabel.setBorder(new EmptyBorder(10,0,10,0));
         difficultyLabel.setFont(new Font("Arial", Font.PLAIN, 20));
@@ -72,10 +108,6 @@ public class RaceConfigGUI
         configPanel.add(diffOption1);
         configPanel.add(diffOption2);
         configPanel.add(diffOption3);
-
-        // Adds the race configuration panel to the panel that has card layout.
-        cardPanel.add(configPanel);
-
     }
 
     public static void main(String[] args)
