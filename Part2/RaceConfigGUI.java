@@ -15,7 +15,7 @@ public class RaceConfigGUI
     private JFrame configFrame;
     private JPanel cardPanel; // Panel for card layout that switches from race configuration to customising typists
 
-    private final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Customised"};
+    // private final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Customised"};
     // private final String[] DIFFICULTY_OPTIONS = {"Autocorrect", "Caffeine mode" ,"Night shift"};
 
     public RaceConfigGUI()
@@ -23,9 +23,9 @@ public class RaceConfigGUI
         this.configFrame = new JFrame("Typing Race");
         configFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         configFrame.setSize(600,500);
-        configFrame.setVisible(true);
         this.cardPanel = new JPanel(new CardLayout());
         configFrame.add(cardPanel);
+        configFrame.setVisible(true);
     }
 
     /**
@@ -33,6 +33,7 @@ public class RaceConfigGUI
      */
     private void showRaceConfig()
     {
+        final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Customised"};
         JPanel configPanel = new JPanel();
         configPanel.setBorder(new EmptyBorder(30,30,30,30));
         BoxLayout boxLayoutManager = new BoxLayout(configPanel, BoxLayout.Y_AXIS);
@@ -44,7 +45,7 @@ public class RaceConfigGUI
         configPanel.add(titleLabel);
 
         // Option to choose passage length from pre-defined list.
-        choosePassage(configPanel);
+        choosePassage(configPanel, PASSAGE_OPTIONS);
 
         // Option to choose how many typists from a slider (max-6, min-2).
         chooseSeatCount(configPanel);
@@ -62,8 +63,8 @@ public class RaceConfigGUI
      * 
      * @param configPanel the panel that will display the race configuration options.
      */
-    private void choosePassage(JPanel configPanel){
-        JLabel passageLabel = new JLabel("Choose passage length");
+    private void choosePassage(JPanel configPanel, String[] PASSAGE_OPTIONS){
+        JLabel passageLabel = new JLabel("Choose passage length:");
         passageLabel.setBorder(new EmptyBorder(10,0,10,0));
         passageLabel.setFont(new Font("Arial", Font.PLAIN, 20));
         configPanel.add(passageLabel);
@@ -98,7 +99,7 @@ public class RaceConfigGUI
      * @param configPanel the panel that will display the race configuration options.
      */
     private void chooseDiffModifiers(JPanel configPanel){
-        JLabel difficultyLabel = new JLabel("Choose difficulty modifiers.");
+        JLabel difficultyLabel = new JLabel("Choose difficulty modifiers:");
         difficultyLabel.setBorder(new EmptyBorder(10,0,10,0));
         difficultyLabel.setFont(new Font("Arial", Font.PLAIN, 20));
         configPanel.add(difficultyLabel);
@@ -110,9 +111,102 @@ public class RaceConfigGUI
         configPanel.add(diffOption3);
     }
 
+    /**
+     * UI for customising typists 
+     */
+    private void showCustomiseTypist(){
+        final String[] TYPING_STYLE_OPTIONS = {"Touch Typing", "Phone Thumbs", "Voice-to-Text"};
+        final String[] KEYBOARD_OPTIONS = {"Ergonomic", "Mechanical", "Touch Screen"};
+        final String[] SYMBOL_OPTIONS = {"①", "②", "③", "④", "⑤", "⑥"};
+        final String[] ACCESSORY_OPTIONS ={"Wrist support", "Energy drink", "Noise cancelling headphones"};
+        JPanel customisePanel = new JPanel();
+        customisePanel.setBorder(new EmptyBorder(30,30,30,30));
+        BoxLayout boxLayoutManager = new BoxLayout(customisePanel, BoxLayout.Y_AXIS);
+        customisePanel.setLayout(boxLayoutManager);
+        JScrollPane panelScrollPane = new JScrollPane(customisePanel);
+
+        JLabel titleLabel = new JLabel("Customise Typists");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        titleLabel.setBorder(new EmptyBorder(10,0,10,0));
+        customisePanel.add(titleLabel);
+
+        // Displays typing style options
+        chooseTypingStyle(customisePanel, TYPING_STYLE_OPTIONS);
+
+        // Displays keyboard options
+        chooseKeyboardType(customisePanel, KEYBOARD_OPTIONS);
+
+        // Displays symbol options
+        chooseSymbol(customisePanel, SYMBOL_OPTIONS);
+
+        // Displays colour options
+        chooseColour(customisePanel);
+
+        // Display accessory options
+        chooseAccessory(customisePanel, ACCESSORY_OPTIONS);
+
+        cardPanel.add(panelScrollPane);
+
+    }
+
+    private void chooseTypingStyle(JPanel customisePanel, String[] typingStyleOptions){
+        JLabel typingLabel = new JLabel("Choose typing style:");
+        typingLabel.setBorder(new EmptyBorder(10,0,10,0));
+        typingLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        customisePanel.add(typingLabel);
+
+        JComboBox<String> styleSelect = new JComboBox<>(typingStyleOptions);
+        styleSelect.setBackground(Color.WHITE);
+        customisePanel.add(styleSelect);
+    }
+
+    private void chooseKeyboardType(JPanel customisePanel, String[] KEYBOARD_OPTIONS){
+        JLabel keyboardLabel = new JLabel("Choose your keyboard type:");
+        keyboardLabel.setBorder(new EmptyBorder(10,0,10,0));
+        keyboardLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        customisePanel.add(keyboardLabel);
+
+        JComboBox<String> keyboardSelect = new JComboBox<>(KEYBOARD_OPTIONS);
+        keyboardSelect.setBackground(Color.WHITE);
+        customisePanel.add(keyboardSelect);
+    }
+
+    private void chooseSymbol(JPanel customisePanel, String[] SYMBOL_OPTIONS){
+        JLabel symbolLabel = new JLabel("Choose your symbol:");
+        symbolLabel.setBorder(new EmptyBorder(10,0,10,0));
+        symbolLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        customisePanel.add(symbolLabel);
+
+        JComboBox<String> symbolSelect = new JComboBox<>(SYMBOL_OPTIONS);
+        symbolSelect.setBackground(Color.WHITE);
+        customisePanel.add(symbolSelect);
+    }
+
+    private void chooseColour(JPanel customisePanel){
+        JLabel colourLabel = new JLabel("Choose you colour:");
+        colourLabel.setBorder(new EmptyBorder(10,0,10,0));
+        colourLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        customisePanel.add(colourLabel);
+
+        JColorChooser colour = new JColorChooser();
+        customisePanel.add(colour);
+
+    }
+
+    private void chooseAccessory(JPanel customisePanel, String[] ACCESSORIES_OPTIONS){
+        JLabel accLabel = new JLabel("Choose your accessories:");
+        accLabel.setBorder(new EmptyBorder(10,0,10,0));
+        accLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        customisePanel.add(accLabel);
+
+        JComboBox<String> accSelect = new JComboBox<>(ACCESSORIES_OPTIONS);
+        accSelect.setBackground(Color.WHITE);
+        customisePanel.add(accSelect);
+    }
+
     public static void main(String[] args)
     {
         RaceConfigGUI race = new RaceConfigGUI();
-        race.showRaceConfig();
+        race.showCustomiseTypist();
     }
 }
