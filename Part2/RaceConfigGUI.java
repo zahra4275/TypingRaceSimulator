@@ -16,6 +16,8 @@ public class RaceConfigGUI
 {
     private JFrame configFrame;
     private JPanel cardPanel; // Panel for card layout that switches from race configuration to customising typists
+    // private TypingRaceGUI race; // Starts the race
+    // private TypistGUI[] TypistList; // List of typists
 
     public RaceConfigGUI()
     {
@@ -54,9 +56,17 @@ public class RaceConfigGUI
 
         JButton nextButton = new JButton("Next");
         configPanel.add(nextButton);
+        nextButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                CardLayout cardLayout = (CardLayout)(cardPanel.getLayout());
+                cardLayout.next(cardPanel);
+            }
+        });
 
         // Adds the race configuration panel to the panel that has card layout.
-        cardPanel.add(configPanel);
+        cardPanel.add(configPanel, "panel1");
+        showCustomiseTypist();
 
     }
 
@@ -74,6 +84,7 @@ public class RaceConfigGUI
         JComboBox<String> passageSelect = new JComboBox<>(PASSAGE_OPTIONS);
         passageSelect.setBackground(Color.WHITE);
         configPanel.add(passageSelect);
+        
     }
 
     /**
@@ -148,10 +159,10 @@ public class RaceConfigGUI
         // Display accessory options
         chooseAccessory(customisePanel, ACCESSORY_OPTIONS);
 
-        JButton nextButton = new JButton("Next");
-        customisePanel.add(nextButton);
+        // JButton nextButton = new JButton("Next");
+        // customisePanel.add(nextButton);
 
-        cardPanel.add(panelScrollPane);
+        cardPanel.add(panelScrollPane, "panel2");
 
     }
 
@@ -249,6 +260,6 @@ public class RaceConfigGUI
     public static void main(String[] args)
     {
         RaceConfigGUI race = new RaceConfigGUI();
-        race.showCustomiseTypist();
+        race.showRaceConfig();
     }
 }
