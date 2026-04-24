@@ -32,6 +32,23 @@ public class TypingRaceGUI
 
     }
 
+    private void selectPassage(String passageSelected){
+        String shortPassage = "Programming";
+        String mediumPassage = "Computer Programming";
+        String longPassage = "Object Oriented Programming";
+        if(passageSelected.equals("Short")){
+            passageLength = 11;
+            passageSelected = shortPassage;
+        }else if(passageSelected.equals("Medium")){
+            passageLength = 20;
+            passageSelected = mediumPassage;
+        }else if(passageSelected.equals("Long")){
+            passageLength = 27;
+            passageSelected = longPassage;
+        }
+    }
+
+
     /**
      * Starts the typing race.
      * All typists are reset to the beginning, then the simulation runs
