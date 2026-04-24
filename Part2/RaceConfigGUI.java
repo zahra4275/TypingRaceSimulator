@@ -17,20 +17,20 @@ public class RaceConfigGUI
 {
     private JFrame configFrame;
     private JPanel cardPanel; // Panel for card layout that switches from race configuration to customising typists
-    private TypingRaceGUI race; // Starts the race
-    private TypistGUI[] TypistList; // List of typists
+    // private TypingRaceGUI race; // Starts the race
+    // private TypistGUI[] TypistList; // List of typists
     private int seatCount;
     private JPanel configPanel;
     private int pageIndex = 0; //Keeps track of how many times to reset the customise typist page.
 
 
     // Constructor
-    // Creates a card layout to switch between views.
+    // Creates a card layout to switch between pages.
     public RaceConfigGUI()
     {
         this.configFrame = new JFrame("Typing Race");
         configFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        configFrame.setSize(600,500);
+        configFrame.setSize(800,650);
         this.cardPanel = new JPanel(new CardLayout());
         configFrame.add(cardPanel);
     }
@@ -40,7 +40,7 @@ public class RaceConfigGUI
      */
     private void showRaceConfig()
     {
-        final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Customised"};
+        final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Custom"};
         configPanel = new JPanel();
         configPanel.setBorder(new EmptyBorder(30,30,30,30));
         BoxLayout boxLayoutManager = new BoxLayout(configPanel, BoxLayout.Y_AXIS);
@@ -48,11 +48,18 @@ public class RaceConfigGUI
 
         JLabel titleLabel = new JLabel("Race Configuration");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
-        titleLabel.setBorder(new EmptyBorder(10,0,10,0));
+        titleLabel.setBorder(new EmptyBorder(0,0,10,0));
         configPanel.add(titleLabel);
 
         // Option to choose passage length from pre-defined list.
         JComboBox selectedPassage = choosePassage(configPanel, PASSAGE_OPTIONS);
+
+        JLabel customPassageLabel = new JLabel("If chose custom, enter you custom passage:");
+        customPassageLabel.setBorder(new EmptyBorder(10,0,10,0));
+        customPassageLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        configPanel.add(customPassageLabel);
+        JTextArea customPassageField = new JTextArea(5,50);
+        configPanel.add(customPassageField);
 
         // Option to choose how many typists from a slider (min-2, max-6).
         JSlider seatSlider = chooseSeatCount(configPanel);
@@ -66,6 +73,9 @@ public class RaceConfigGUI
             @Override
             public void actionPerformed(ActionEvent e){
                 String chosenPassage = selectedPassage.getSelectedItem().toString();
+                if(chosenPassage.equals("Custom")){
+                    String customPassage = customPassageField.getText();
+                }
                 int ChosenseatCount = seatSlider.getValue();
                 for(JCheckBox b: diffArray){
                     if(b.isSelected()){
@@ -135,7 +145,7 @@ public class RaceConfigGUI
         configPanel.add(difficultyLabel);
 
         JCheckBox diffOption1 = new JCheckBox("AutoCorrect: halves slide back amount");
-        JCheckBox diffOption2 = new JCheckBox("Caffeine mode: All typists gain a temporary speed boost, followed by increased burnout");
+        JCheckBox diffOption2 = new JCheckBox("Caffeine Mode: All typists gain a temporary speed boost, followed by increased burnout");
         JCheckBox diffOption3 = new JCheckBox("Night Shift: All typists accuracy are slightly reduced");
         configPanel.add(diffOption1);
         configPanel.add(diffOption2);
@@ -163,6 +173,9 @@ public class RaceConfigGUI
         titleLabel.setBorder(new EmptyBorder(10,0,10,0));
         customisePanel.add(titleLabel);
 
+        // Displays area to enter name
+        JTextField nameField = enterTypistName(customisePanel);
+
         // Displays typing style options
         JComboBox typingStyleBox = chooseTypingStyle(customisePanel, TYPING_STYLE_OPTIONS);
 
@@ -178,12 +191,13 @@ public class RaceConfigGUI
         // Display accessory options
         JComboBox accessoryBox = chooseAccessory(customisePanel, ACCESSORY_OPTIONS);
 
-
+        // Button that goes to the next page, which is to customise typists
         JButton nextButton = new JButton("Next");
          nextButton.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e){
                 if(pageIndex <= seatCount){
+                    String nameEntered = nameField.getText();
                     String styleChosen = typingStyleBox.getSelectedItem().toString();                
                     String keyboardChosen = keyboardBox.getSelectedItem().toString();                
                     String symbolChosen = symbolBox.getSelectedItem().toString();                
@@ -194,9 +208,7 @@ public class RaceConfigGUI
                     increaseIndex();
                 }
                 else{
-                    showNextPanel();
-                    CardLayout cardLayout = (CardLayout)(cardPanel.getLayout());
-                    cardLayout.next(cardPanel);
+                    
                 }
             }
         });
@@ -229,11 +241,18 @@ public class RaceConfigGUI
         accessoryBox.setSelectedIndex(0);
     }
 
-    private void showNextPanel(){
-        JPanel nextPanel = new JPanel();
-        JLabel t = new JLabel("Hello");
-        nextPanel.add(t);
-        cardPanel.add(nextPanel,"Panel3");
+    /**
+     * Displays text area to enter typist's name.
+     */
+    private JTextField enterTypistName(JPanel customisePanel){
+        JLabel nameLabel = new JLabel("Enter typist name");
+        nameLabel.setBorder(new EmptyBorder(10,0,10,0));
+        nameLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        customisePanel.add(nameLabel);
+
+        JTextField nameField = new JTextField();
+        customisePanel.add(nameField);
+        return nameField;
     }
 
     /**
