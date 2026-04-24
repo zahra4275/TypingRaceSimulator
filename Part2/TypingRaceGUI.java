@@ -12,8 +12,8 @@ public class TypingRaceGUI
 {
     private String passageSelected;
     private int passageLength;
-    private int seatCount;
-    private String[] difficultyModifier;
+    private final int seatCount;
+    private final String[] difficultyModifier;
     private TypistGUI[] typistList;
     private JFrame frame;
     private CardLayout cards;
@@ -22,6 +22,7 @@ public class TypingRaceGUI
     private final double MISTYPE_BASE_CHANCE = 0.3;
     private int    SLIDE_BACK_AMOUNT   = 2;
     private final int    BURNOUT_DURATION     = 3;
+    private double BURNOUT_RISK = 0.3;
 
     public TypingRaceGUI(String passageSelected, int seatCount, String[] difficultyModifiersChosen, TypistGUI[] typistList){
         selectPassage(passageSelected);
@@ -48,6 +49,32 @@ public class TypingRaceGUI
         }
     }
 
+    private void applyDifficultyModifier(){
+        for(String s: difficultyModifier){
+            if(s.equals("AutoCorrect")){
+                applyAutocorrect();
+            }else if(s.equals("Caffeine Mode")){
+                applyCaffeineMode();
+            }else if(s.equals("Night Shift")){
+                applyNightShift();
+            }
+        }
+    }
+
+    private void applyAutocorrect(){
+        SLIDE_BACK_AMOUNT = SLIDE_BACK_AMOUNT / 2;
+    }
+
+    private void applyCaffeineMode(){
+        BURNOUT_RISK = 0.2;
+    }
+
+    private void applyNightShift(){
+        for(TypistGUI t: typistList){
+            double oldAccuracy = t.getAccuracy();
+            t.setAccuracy(oldAccuracy + 0.15);
+        }
+    }
 
     /**
      * Starts the typing race.
