@@ -18,8 +18,14 @@ public class RaceConfigGUI
     private JFrame configFrame;
     private JPanel cardPanel; // Panel for card layout that switches from race configuration to customising typists
     private TypingRaceGUI race; // Starts the race
-    // private TypistGUI[] TypistList; // List of typists
+    private TypistGUI[] TypistList; // List of typists
+    private int seatCount;
+    private JPanel configPanel;
+    private int pageIndex = 0; //Keeps track of how many times to reset the customise typist page.
 
+
+    // Constructor
+    // Creates a card layout to switch between views.
     public RaceConfigGUI()
     {
         this.configFrame = new JFrame("Typing Race");
@@ -27,7 +33,6 @@ public class RaceConfigGUI
         configFrame.setSize(600,500);
         this.cardPanel = new JPanel(new CardLayout());
         configFrame.add(cardPanel);
-        // configFrame.setVisible(true);
     }
 
     /**
@@ -36,7 +41,7 @@ public class RaceConfigGUI
     private void showRaceConfig()
     {
         final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Customised"};
-        JPanel configPanel = new JPanel();
+        configPanel = new JPanel();
         configPanel.setBorder(new EmptyBorder(30,30,30,30));
         BoxLayout boxLayoutManager = new BoxLayout(configPanel, BoxLayout.Y_AXIS);
         configPanel.setLayout(boxLayoutManager);
@@ -50,7 +55,7 @@ public class RaceConfigGUI
         JComboBox selectedPassage = choosePassage(configPanel, PASSAGE_OPTIONS);
 
         // Option to choose how many typists from a slider (min-2, max-6).
-        JSlider seatSLider = chooseSeatCount(configPanel);
+        JSlider seatSlider = chooseSeatCount(configPanel);
 
         // Option to choose difficulty modifiers, can choose more than one option.
         JCheckBox[] diffArray = chooseDiffModifiers(configPanel);
@@ -60,17 +65,20 @@ public class RaceConfigGUI
         nextButton.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e){
-                // String pValue = selectedPassage.getSelectedItem().toString();
-                // JLabel pLabel = new JLabel(pValue);
-                // configPanel.add(pLabel);
-                // configPanel.revalidate();
+                String chosenPassage = selectedPassage.getSelectedItem().toString();
+                int ChosenseatCount = seatSlider.getValue();
+                for(JCheckBox b: diffArray){
+                    if(b.isSelected()){
+                        String difficultyChosen = b.getText();
+                    }
+                }
                 CardLayout cardLayout = (CardLayout)(cardPanel.getLayout());
                 cardLayout.next(cardPanel);
             }
         });
 
         // Adds the race configuration panel to the panel that has card layout.
-        cardPanel.add(configPanel, "panel1");
+        cardPanel.add(configPanel, "panel");
         showCustomiseTypist();
         configFrame.setVisible(true);
 
@@ -110,6 +118,7 @@ public class RaceConfigGUI
         seatSlider.setMinorTickSpacing(1);
         seatSlider.setPaintLabels(true);
         seatSlider.setPaintTicks(true);
+        seatSlider.setValue(2);
         configPanel.add(seatSlider);
         return seatSlider;
     }
@@ -169,12 +178,62 @@ public class RaceConfigGUI
         // Display accessory options
         JComboBox accessoryBox = chooseAccessory(customisePanel, ACCESSORY_OPTIONS);
 
+
         JButton nextButton = new JButton("Next");
+         nextButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                if(pageIndex <= seatCount){
+                    String styleChosen = typingStyleBox.getSelectedItem().toString();                
+                    String keyboardChosen = keyboardBox.getSelectedItem().toString();                
+                    String symbolChosen = symbolBox.getSelectedItem().toString();                
+                    Color colourChosen = colourChooser.getColor();
+                    String accChosen = accessoryBox.getSelectedItem().toString();
+
+                    resetAllFields(typingStyleBox, keyboardBox, symbolBox, colourChooser, accessoryBox);
+                    increaseIndex();
+                }
+                else{
+                    showNextPanel();
+                    CardLayout cardLayout = (CardLayout)(cardPanel.getLayout());
+                    cardLayout.next(cardPanel);
+                }
+            }
+        });
         customisePanel.add(nextButton);
+        cardPanel.add(panelScrollPane, "Panel2");
+    }
 
-        cardPanel.add(panelScrollPane, "panel2");
+    /** 
+     * Encapsulation method
+     * Increases the pageIndex
+     * */ 
+    private void increaseIndex(){
+        pageIndex++;
+    }
 
+    /**
+     * Resets the customise typists page, to allow all typists to be customised.
+     * 
+     * @param typingStyleBox input area to choose typing style
+     * @param keyboardBox input area to choose keyboard style
+     * @param symbolBox input area for entering typist symbol
+     * @param colourChooser color chooser to choose typist colour, reset to default colour, white.
+     * @param accessoryBox input area to choose accessories.
+     */
+    public void resetAllFields(JComboBox typingStyleBox, JComboBox keyboardBox, JComboBox symbolBox, JColorChooser colourChooser, JComboBox accessoryBox){
+        typingStyleBox.setSelectedIndex(0);
+        keyboardBox.setSelectedIndex(0);
+        symbolBox.setSelectedIndex(0);
+        colourChooser.setColor(Color.WHITE);
+        accessoryBox.setSelectedIndex(0);
+    }
 
+    private void showNextPanel(){
+        JPanel nextPanel = new JPanel();
+        JLabel t = new JLabel("Hello");
+        nextPanel.add(t);
+        cardPanel.add(nextPanel,"Panel3");
     }
 
     /**
@@ -267,7 +326,6 @@ public class RaceConfigGUI
         customisePanel.add(chooseColour);
 
         return chooseColour;
-
     }
 
     /**
