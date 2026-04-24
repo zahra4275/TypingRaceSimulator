@@ -24,31 +24,45 @@ public class TypingRaceGUI
     private final int    BURNOUT_DURATION     = 3;
     private double BURNOUT_RISK = 0.3;
 
-    public TypingRaceGUI(String passageSelected, int seatCount, String[] difficultyModifiersChosen, TypistGUI[] typistList){
+    /**
+     * Constructor for objects of Class TypingRaceGUI
+     * Sets up the race with a passage of chosen length and applies difficulty modifiers.
+     * 
+     * @param passageSelected represents the passage length chosen by user
+     * @param seatCount represents the number of typists (min-2, max-6)
+     * @param difficultyModifiersChosen holds all difficulty modifiers chosen for the race
+     */
+    public TypingRaceGUI(String passageSelected, int seatCount, String[] difficultyModifiersChosen){
         selectPassage(passageSelected);
         this.seatCount = seatCount;
         this.difficultyModifier = difficultyModifiersChosen;
         applyDifficultyModifier();
-        this.typistList = typistList;
-
     }
 
-    private void selectPassage(String passageSelected){
+    /**
+     * Sets the passage length and passage for the race
+     * 
+     * @param chosenPassage the passage length chosen by user (short, medium, long, custom).
+     */
+    private void selectPassage(String chosenPassage){
         String shortPassage = "Programming";
         String mediumPassage = "Computer Programming";
         String longPassage = "Object Oriented Programming";
-        if(passageSelected.equals("Short")){
+        if(chosenPassage.equals("Short")){
             passageLength = 11;
             passageSelected = shortPassage;
-        }else if(passageSelected.equals("Medium")){
+        }else if(chosenPassage.equals("Medium")){
             passageLength = 20;
             passageSelected = mediumPassage;
-        }else if(passageSelected.equals("Long")){
+        }else if(chosenPassage.equals("Long")){
             passageLength = 27;
             passageSelected = longPassage;
         }
     }
 
+    /**
+     * Applies appropriate difficulty modifier, if present in the array.
+     */
     private void applyDifficultyModifier(){
         for(String s: difficultyModifier){
             if(s.equals("AutoCorrect")){
@@ -61,19 +75,36 @@ public class TypingRaceGUI
         }
     }
 
+    /**
+     * If AutoCorrect is chosen, slide back amount is halved for all typists.
+     */
     private void applyAutocorrect(){
         SLIDE_BACK_AMOUNT = SLIDE_BACK_AMOUNT / 2;
     }
 
+    /**
+     * If Caffeine mode is chosen, the risk of burnout is lower.
+     */
     private void applyCaffeineMode(){
         BURNOUT_RISK = 0.2;
     }
 
+    /**
+     * If Night Shift is chosen, the accuracy is lower for all typists.
+     */
     private void applyNightShift(){
         for(TypistGUI t: typistList){
             double oldAccuracy = t.getAccuracy();
-            t.setAccuracy(oldAccuracy + 0.15);
+            t.setAccuracy(oldAccuracy - 0.07);
         }
+    }
+
+    /**
+     * Encapsulation method
+     * Sets list of typists for the race.
+     */
+    public void setTypistList(TypistGUI[] typistList){
+        this.typistList = typistList;
     }
 
     /**
@@ -84,14 +115,12 @@ public class TypingRaceGUI
     public void startRace()
     {
         boolean finished = false;
-        Typist winnerName = null;
+        TypistGUI winnerName = null;
         double oldAccuracy = 0.0;
         final double INCREASE_ACCURACY = 1.02;
 
         // Reset all typists to the start of the passage
-        seat1Typist.resetToStart();
-        seat2Typist.resetToStart();
-        seat3Typist.resetToStart();
+        ResetAllTypists();
 
         while (!finished)
         {
@@ -136,6 +165,15 @@ public class TypingRaceGUI
         System.out.println("And the Winner is... " + winnerName.typistName);
         System.out.println("Final accuracy: " + winnerName.getAccuracy() + " (improved from " + oldAccuracy + " )");
 
+    }
+
+    /**
+     * Resets all typists to start of passage.
+     */
+    private void ResetAllTypists(){
+        for(TypistGUI t: typistList){
+            t.resetToStart();
+        }
     }
 
     /**
@@ -300,7 +338,7 @@ public class TypingRaceGUI
 
     public static void main(String[] args) 
     {
-        int[] array = {1,2};
-        TypingRaceGUI race = new TypingRaceGUI("short", 3, array);
+        // int[] array = {1,2};
+        // TypingRaceGUI race = new TypingRaceGUI("short", 3, array);
     }
 }
