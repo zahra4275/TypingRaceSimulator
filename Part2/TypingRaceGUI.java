@@ -1,5 +1,6 @@
 import java.awt.CardLayout;
 import javax.swing.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A typing race graphical user interface. Players get to configure the race, choose customisables and race.
@@ -20,8 +21,8 @@ public class TypingRaceGUI
 
     // Accuracy thresholds for mistype and burnout events
     private final double MISTYPE_BASE_CHANCE = 0.3;
-    private int    SLIDE_BACK_AMOUNT   = 2;
-    private final int    BURNOUT_DURATION     = 3;
+    private int SLIDE_BACK_AMOUNT = 2;
+    private final int BURNOUT_DURATION = 3;
     private double BURNOUT_RISK = 0.3;
 
     /**
@@ -115,7 +116,7 @@ public class TypingRaceGUI
     public void startRace()
     {
         boolean finished = false;
-        TypistGUI winnerName = null;
+        TypistGUI winner = null;
         double oldAccuracy = 0.0;
         final double INCREASE_ACCURACY = 1.02;
 
@@ -125,34 +126,19 @@ public class TypingRaceGUI
         while (!finished)
         {
             // Advance each typist by one turn
-            advanceTypist(seat1Typist);
-            advanceTypist(seat2Typist);
-            advanceTypist(seat3Typist);
+            AdvanceAllTypists();
 
             // Print the current state of the race
             printRace();
 
             // Check if any typist has finished the passage
-            if ( raceFinishedBy(seat1Typist))
-            {
+            for(TypistGUI t: typistList){
+                if(raceFinishedBy(t)){
                 finished = true;
-                winnerName = seat1Typist; 
-                oldAccuracy = seat1Typist.getAccuracy();
-                seat1Typist.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
-            } 
-            else if(raceFinishedBy(seat2Typist))
-            {
-                finished = true;
-                winnerName = seat2Typist;
-                oldAccuracy = seat2Typist.getAccuracy(); 
-                seat2Typist.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
-            }
-            else if(raceFinishedBy(seat3Typist))
-            {
-                finished = true;
-                winnerName = seat3Typist; 
-                oldAccuracy = seat3Typist.getAccuracy();
-                seat3Typist.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
+                winner = t; 
+                oldAccuracy = t.getAccuracy();
+                t.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
+                }
             }
 
             // Wait 200ms between turns so the animation is visible
@@ -161,9 +147,8 @@ public class TypingRaceGUI
             } catch (Exception e) {}
         }
 
-        // TODO (Task 2a): Print the winner's name here
-        System.out.println("And the Winner is... " + winnerName.typistName);
-        System.out.println("Final accuracy: " + winnerName.getAccuracy() + " (improved from " + oldAccuracy + " )");
+        System.out.println("And the Winner is... " + winner.typistName);
+        System.out.println("Final accuracy: " + winner.getAccuracy() + " (improved from " + oldAccuracy + " )");
 
     }
 
@@ -173,6 +158,12 @@ public class TypingRaceGUI
     private void ResetAllTypists(){
         for(TypistGUI t: typistList){
             t.resetToStart();
+        }
+    }
+
+    private void AdvanceAllTypists(){
+        for(TypistGUI t: typistList){
+            advanceTypist(t);
         }
     }
 
@@ -211,7 +202,14 @@ public class TypingRaceGUI
         }
 
         // Mistype check — the probability should reflect the typist's accuracy
-        if ((typeChance < theTypist.getAccuracy() * MISTYPE_BASE_CHANCE)&&(!theTypist.isBurntOut()))
+        double mistypeChance = theTypist.getAccuracy() * MISTYPE_BASE_CHANCE;
+        if(theTypist.getKeyboardStyle().equals("Ergonomic")){
+            mistypeChance = mistypeChance * 0.8;
+        }else if(theTypist.getKeyboardStyle().equals("Touch Screen")){
+            mistypeChance = mistypeChance * 1.1;
+        }
+
+        if ((typeChance < mistypeChance)&&(!theTypist.isBurntOut()))
         {
             theTypist.slideBack(SLIDE_BACK_AMOUNT);
             theTypist.setMisTyped(true);
@@ -219,9 +217,21 @@ public class TypingRaceGUI
 
         // Burnout check — pushing too hard increases burnout risk
         // (probability scales with accuracy squared, capped at ~0.05)
-        if ((typeChance < 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy())&&(!theTypist.getMisTyped()))
+        double burnoutChance = 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy();
+        if(theTypist.getTypingStyle().equals("Touch Typing")){
+            burnoutChance = burnoutChance * 1.2;
+        }
+        else if(theTypist.getTypingStyle().equals("Phone Thumbs")){
+            burnoutChance = burnoutChance * 1.1;
+        }
+
+        if ((typeChance < burnoutChance)&&(!theTypist.getMisTyped()))
         {
-            theTypist.burnOut(BURNOUT_DURATION);
+            if(theTypist.getAccessory().equals("Wrist Support")){
+                theTypist.burnOut(BURNOUT_DURATION - 1);
+            }else{
+                theTypist.burnOut(BURNOUT_DURATION);
+            }
         }
     }
 
