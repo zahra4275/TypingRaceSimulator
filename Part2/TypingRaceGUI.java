@@ -2,6 +2,8 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 
 /**
  * A typing race graphical user interface. Players get to configure the race, choose customisables and race.
@@ -32,15 +34,14 @@ public class TypingRaceGUI
      * Sets up the race with a passage of chosen length and applies difficulty modifiers.
      * 
      * @param passageSelected represents the passage length chosen by user
-     * @param seatCount represents the number of typists (min-2, max-6)
+     * @param seatCount represents the number of typists (2-6)
      * @param difficultyModifiersChosen holds all difficulty modifiers chosen for the race
      */
-    public TypingRaceGUI(String passageSelected, int seatCount, String[] difficultyModifiersChosen){
-        selectPassage(passageSelected);
+    public TypingRaceGUI(String passageSelected, int seatCount, String[] difficultyModifiersChosen, String customPassage){
+        selectPassage(passageSelected, customPassage);
         this.seatCount = seatCount;
         this.difficultyModifier = difficultyModifiersChosen;
-        // applyDifficultyModifier();
-        // cards = cardPanel;
+        typistPanelsArray = new JPanel[seatCount];
     }
 
     /**
@@ -48,7 +49,7 @@ public class TypingRaceGUI
      * 
      * @param chosenPassage the passage length chosen by user (short, medium, long, custom).
      */
-    private void selectPassage(String chosenPassage){
+    private void selectPassage(String chosenPassage, String customPassage){
         String shortPassage = "Programming";
         String mediumPassage = "Computer Programming";
         String longPassage = "Object Oriented Programming";
@@ -61,6 +62,9 @@ public class TypingRaceGUI
         }else if(chosenPassage.equals("Long")){
             passageLength = 27;
             passageSelected = longPassage;
+        }else if(chosenPassage.equals("Custom")){
+            passageSelected = customPassage;
+            passageLength = customPassage.length();
         }
     }
 
@@ -118,22 +122,29 @@ public class TypingRaceGUI
      */
     public void startRace()
     {
+        Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Color.green);
         boolean finished = false;
         TypistGUI winner = null;
         double oldAccuracy = 0.0;
         final double INCREASE_ACCURACY = 1.02;
 
+        // Display each typist's name and symbol along with the passage.
+        JTextPane[] paneArray = printRace();
+        System.out.println("Print done");
+
         // Reset all typists to the start of the passage
-        ResetAllTypists();
+        ResetAllTypists(painter, paneArray);
+        System.out.println("Reset done");
         applyDifficultyModifier();
+        System.out.println("Applied done");
+
 
         while (!finished)
         {
-            // Advance each typist by one turn
-            AdvanceAllTypists();
 
-            // Print the current state of the race
-            printRace();
+            // Advance each typist by one turn
+            AdvanceAllTypists(paneArray, painter);
+            System.out.println("player advanced");
 
             // Check if any typist has finished the passage
             for(TypistGUI t: typistList){
@@ -159,18 +170,24 @@ public class TypingRaceGUI
     /**
      * Resets all typists to start of passage.
      */
-    private void ResetAllTypists(){
-        for(TypistGUI t: typistList){
-            t.resetToStart();
+    private void ResetAllTypists(Highlighter.HighlightPainter painter, JTextPane[] paneArray){
+        for(int i=0; i<seatCount; i++){
+            typistList[i].resetToStart();
+            JTextPane pane = paneArray[i];
+            Highlighter HL = pane.getHighlighter();
+            try {
+                HL.addHighlight(0, 1, painter);
+            } catch (Exception e) {
+            }
         }
     }
 
     /**
      * Advances all typists
      */
-    private void AdvanceAllTypists(){
-        for(TypistGUI t: typistList){
-            advanceTypist(t);
+    private void AdvanceAllTypists(JTextPane[] paneArray, Highlighter.HighlightPainter painter){
+        for(int i=0; i<seatCount; i++){
+            advanceTypist(typistList[i], paneArray[i], painter);
         }
     }
 
@@ -187,7 +204,7 @@ public class TypingRaceGUI
      *
      * @param theTypist the typist to advance
      */
-    private void advanceTypist(TypistGUI theTypist)
+    private void advanceTypist(TypistGUI theTypist, JTextPane pane, Highlighter.HighlightPainter painter)
     {
         if (theTypist.isBurntOut())
         {
@@ -206,6 +223,8 @@ public class TypingRaceGUI
         if (typeChance < theTypist.getAccuracy())
         {
             theTypist.typeCharacter();
+            highlightCharacter(pane, painter, theTypist);
+            System.out.println("player moved forward");
         }
 
         // Depending on keyboard style, the chance of mistyping is affected.
@@ -221,12 +240,14 @@ public class TypingRaceGUI
         {
             theTypist.slideBack(SLIDE_BACK_AMOUNT);
             theTypist.setMisTyped(true);
+            System.out.println("player moved back");
+            // removePrevHighlights(theTypist, pane, painter);
         }
 
         //Depending on typing style, the chance of burning out is affected.
         double burnoutChance = 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy();
         if(theTypist.getTypingStyle().equals("Touch Typing")){
-            burnoutChance = burnoutChance * 1.2;
+            burnoutChance = burnoutChance * 1.3;
         }
         else if(theTypist.getTypingStyle().equals("Phone Thumbs")){
             burnoutChance = burnoutChance * 1.1;
@@ -240,6 +261,7 @@ public class TypingRaceGUI
                 theTypist.burnOut(BURNOUT_DURATION - 1);
             }else{
                 theTypist.burnOut(BURNOUT_DURATION);
+                System.out.println("player burnt out");
             }
         }
 
@@ -259,6 +281,19 @@ public class TypingRaceGUI
         }
     }
 
+    private void highlightCharacter(JTextPane pane, Highlighter.HighlightPainter painter, TypistGUI theTypist){
+        Highlighter HL = pane.getHighlighter();
+        int index = theTypist.getProgress();
+        try {
+            HL.addHighlight(index, index+1, painter);
+        } catch (Exception e) {
+        }
+    }
+
+    // private void removePrevHighlights(TypistGUI theTypist, JTextPane pane, Highlighter.HighlightPainter painter){
+
+    // }
+
     /**
      * Returns true if the given typist has completed the full passage.
      *
@@ -275,8 +310,9 @@ public class TypingRaceGUI
      * 
      * 
      */
-    private void printRace()
+    private JTextPane[] printRace()
     {
+        JTextPane[] paneArray = new JTextPane[seatCount];
         JFrame raceFrame = new JFrame();
         JPanel racePanel = new JPanel();
         BoxLayout boxLayoutManager = new BoxLayout(racePanel, BoxLayout.Y_AXIS);
@@ -288,8 +324,11 @@ public class TypingRaceGUI
             JPanel typistPanel = new JPanel(new FlowLayout());
             JLabel typistName = new JLabel(typistList[i].getName() +" " + typistList[i].getSymbol());
             typistPanel.add(typistName);
-            JTextArea passage = new JTextArea(passageSelected);
+            JTextPane passage = new JTextPane();
+            passage.setText(passageSelected);
+            passage.setEditable(false);
             typistPanel.add(passage);
+            paneArray[i] = passage;
             racePanel.add(typistPanel);
             typistPanelsArray[i] = typistPanel;
         }
@@ -297,7 +336,7 @@ public class TypingRaceGUI
         raceFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         raceFrame.setSize(800,650);
         raceFrame.setVisible(true);
-
+        return paneArray;
     }
 
     /**
@@ -375,12 +414,12 @@ public class TypingRaceGUI
 
     public static void main(String[] args) 
     {
-        TypistGUI t1 = new TypistGUI('@', "player1", "Touch Typing", "Mechanical", Color.black, "Wrist Support");
-        TypistGUI t2 = new TypistGUI('!', "player2", "Touch Typing", "Mechanical", Color.black, "Wrist Support");
+        TypistGUI t1 = new TypistGUI('@', "player1", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.85);
+        TypistGUI t2 = new TypistGUI('!', "player2", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.5);
         TypistGUI[] playersArray = {t1, t2};
         String[] diffArray = {"AutoCorrect", "Night Shift"};
-        TypingRaceGUI race = new TypingRaceGUI("Short", 2, diffArray);
+        TypingRaceGUI race = new TypingRaceGUI("Short", 2, diffArray, null);
         race.setTypistList(playersArray);
-        race.printRace();
+        race.startRace();
     }
 }
