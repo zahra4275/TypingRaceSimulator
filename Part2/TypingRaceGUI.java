@@ -27,7 +27,6 @@ public class TypingRaceGUI
     private int SLIDE_BACK_AMOUNT = 2;
     private final int BURNOUT_DURATION = 3;
     private double BURNOUT_RISK = 0.3;
-    private JPanel[] typistPanelsArray; 
 
     /**
      * Constructor for objects of Class TypingRaceGUI
@@ -41,7 +40,6 @@ public class TypingRaceGUI
         selectPassage(passageSelected, customPassage);
         this.seatCount = seatCount;
         this.difficultyModifier = difficultyModifiersChosen;
-        typistPanelsArray = new JPanel[seatCount];
     }
 
     /**
@@ -187,6 +185,7 @@ public class TypingRaceGUI
      */
     private void AdvanceAllTypists(JTextPane[] paneArray, Highlighter.HighlightPainter painter){
         for(int i=0; i<seatCount; i++){
+            System.out.println("Player "+i);
             advanceTypist(typistList[i], paneArray[i], painter);
         }
     }
@@ -223,7 +222,7 @@ public class TypingRaceGUI
         if (typeChance < theTypist.getAccuracy())
         {
             theTypist.typeCharacter();
-            highlightCharacter(pane, painter, theTypist);
+            highlightCharacter(pane, theTypist);
             System.out.println("player moved forward");
         }
 
@@ -241,7 +240,7 @@ public class TypingRaceGUI
             theTypist.slideBack(SLIDE_BACK_AMOUNT);
             theTypist.setMisTyped(true);
             System.out.println("player moved back");
-            // removePrevHighlights(theTypist, pane, painter);
+            removePrevHighlights(theTypist, pane);
         }
 
         //Depending on typing style, the chance of burning out is affected.
@@ -281,18 +280,34 @@ public class TypingRaceGUI
         }
     }
 
-    private void highlightCharacter(JTextPane pane, Highlighter.HighlightPainter painter, TypistGUI theTypist){
+    /**
+     * Highlights a correct character in green.
+     * 
+     * @param pane Holds the passage for current typist
+     * @param theTypist current typist
+     */
+    private void highlightCharacter(JTextPane pane, TypistGUI theTypist){
         Highlighter HL = pane.getHighlighter();
+        Highlighter.Highlight[] highlights = HL.getHighlights();
         int index = theTypist.getProgress();
         try {
-            HL.addHighlight(index, index+1, painter);
+            HL.changeHighlight(highlights[0], 0, index+1);
         } catch (Exception e) {
         }
     }
 
-    // private void removePrevHighlights(TypistGUI theTypist, JTextPane pane, Highlighter.HighlightPainter painter){
-
-    // }
+    /**
+     * Removes highlight of characters to show slide back.
+     */
+    private void removePrevHighlights(TypistGUI theTypist, JTextPane pane){
+        Highlighter HL = pane.getHighlighter();
+        Highlighter.Highlight[] highlights = HL.getHighlights();
+        int index = theTypist.getProgress();
+        try {
+            HL.changeHighlight(highlights[0], 0, index);
+        } catch (Exception e) {
+        }
+    }
 
     /**
      * Returns true if the given typist has completed the full passage.
@@ -306,8 +321,8 @@ public class TypingRaceGUI
     }
 
     /**
-     * 
-     * 
+     * UI for the race
+     * Adds all typists and passage to the screen
      * 
      */
     private JTextPane[] printRace()
@@ -330,7 +345,6 @@ public class TypingRaceGUI
             typistPanel.add(passage);
             paneArray[i] = passage;
             racePanel.add(typistPanel);
-            typistPanelsArray[i] = typistPanel;
         }
         raceFrame.add(racePanel);
         raceFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -417,7 +431,7 @@ public class TypingRaceGUI
         TypistGUI t1 = new TypistGUI('@', "player1", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.85);
         TypistGUI t2 = new TypistGUI('!', "player2", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.5);
         TypistGUI[] playersArray = {t1, t2};
-        String[] diffArray = {"AutoCorrect", "Night Shift"};
+        String[] diffArray = {"Autocorrect", "Night Shift"};
         TypingRaceGUI race = new TypingRaceGUI("Short", 2, diffArray, null);
         race.setTypistList(playersArray);
         race.startRace();
