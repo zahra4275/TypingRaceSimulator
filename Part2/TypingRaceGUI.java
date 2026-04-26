@@ -19,14 +19,14 @@ public class TypingRaceGUI
     private final int seatCount;
     private final String[] difficultyModifier;
     private TypistGUI[] typistList;
-    private JFrame frame;
+    private JLabel[] typistLabelArray;
     private JPanel cards;
 
     // Accuracy thresholds for mistype and burnout events
     private final double MISTYPE_BASE_CHANCE = 0.3;
     private int SLIDE_BACK_AMOUNT = 2;
     private final int BURNOUT_DURATION = 3;
-    private double BURNOUT_RISK = 0.3;
+    private boolean caffeineMode = false;
 
     /**
      * Constructor for objects of Class TypingRaceGUI
@@ -74,7 +74,7 @@ public class TypingRaceGUI
             if(s.equals("AutoCorrect")){
                 applyAutocorrect();
             }else if(s.equals("Caffeine Mode")){
-                applyCaffeineMode();
+                caffeineMode = true;
             }else if(s.equals("Night Shift")){
                 applyNightShift();
             }
@@ -86,13 +86,6 @@ public class TypingRaceGUI
      */
     private void applyAutocorrect(){
         SLIDE_BACK_AMOUNT = SLIDE_BACK_AMOUNT / 2;
-    }
-
-    /**
-     * If Caffeine mode is chosen, the risk of burnout is lower.
-     */
-    private void applyCaffeineMode(){
-        BURNOUT_RISK = 0.2;
     }
 
     /**
@@ -126,6 +119,9 @@ public class TypingRaceGUI
         TypistGUI winner = null;
         double oldAccuracy = 0.0;
         final double INCREASE_ACCURACY = 1.02;
+        int turns = 0;
+        long EndTime = 0;
+        double winnerWPM = 0;
 
         // Display each typist's name and symbol along with the passage.
         JTextPane[] paneArray = printRace();
@@ -134,12 +130,18 @@ public class TypingRaceGUI
         ResetAllTypists(painter, paneArray, currentPainter);
         applyDifficultyModifier();
 
+        // Start timer
+        long StartTime = System.nanoTime();
 
-        while (!finished)
+        while(!finished)
         {
-
+            turns++;
             // Advance each typist by one turn
-            AdvanceAllTypists(paneArray, painter);
+            AdvanceAllTypists(paneArray, turns);
+            
+
+            //Displays if any typist has mistyped or is burnt out
+            // updateTypistsUI();
 
             // Check if any typist has finished the passage
             for(TypistGUI t: typistList){
@@ -148,14 +150,16 @@ public class TypingRaceGUI
                 winner = t; 
                 oldAccuracy = t.getAccuracy();
                 t.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
+                EndTime = System.nanoTime();
+                winnerWPM = calculateWinnerWPM(StartTime, EndTime);
                 }
             }
-
         }
 
-        System.out.println("And the Winner is... " + winner.typistName);
+        
+        System.out.println("Winner: " + winnerWPM + " WPM");
+        System.out.println("And the Winner is... " + winner.getName());
         System.out.println("Final accuracy: " + winner.getAccuracy() + " (improved from " + oldAccuracy + " )");
-
     }
 
     /**
@@ -177,9 +181,9 @@ public class TypingRaceGUI
     /**
      * Advances all typists
      */
-    private void AdvanceAllTypists(JTextPane[] paneArray, Highlighter.HighlightPainter painter){
+    private void AdvanceAllTypists(JTextPane[] paneArray, int turns){
         for(int i=0; i<seatCount; i++){
-            advanceTypist(typistList[i], paneArray[i], painter);
+            advanceTypist(typistList[i], paneArray[i], turns);
         }
     }
 
@@ -196,57 +200,48 @@ public class TypingRaceGUI
      *
      * @param theTypist the typist to advance
      */
-    private void advanceTypist(TypistGUI theTypist, JTextPane pane, Highlighter.HighlightPainter painter)
+    private void advanceTypist(TypistGUI theTypist, JTextPane pane, int turns)
     {
+        if(turns > 10){
+            caffeineMode = false;
+        }
+
         if (theTypist.isBurntOut())
         {
             // Recovering from burnout — skip this turn
             theTypist.recoverFromBurnout();
             return;
         }
-        if(theTypist.misTyped){
+        if(theTypist.getMisTyped()){
 
             //mistype only lasts one turn, resets at the next turn
             theTypist.setMisTyped(false);
         }
 
-        double typeChance = Math.random();
+        // double typeChance = Math.random();
         // Attempt to type a character
-        if (typeChance < theTypist.getAccuracy())
+        if (Math.random() < theTypist.getAccuracy())
         {
             theTypist.typeCharacter();
             highlightCharacter(pane, theTypist);
         }
 
         // Depending on keyboard style, the chance of mistyping is affected.
-        double mistypeChance = theTypist.getAccuracy() * MISTYPE_BASE_CHANCE;
-        if(theTypist.getKeyboardStyle().equals("Ergonomic")){
-            mistypeChance = mistypeChance * 0.8;
-        }else if(theTypist.getKeyboardStyle().equals("Touch Screen")){
-            mistypeChance = mistypeChance * 1.1;
-        }
+        double mistypeChance = calculateMistypeChance(theTypist);
 
         // Mistype check — the probability should reflect the typist's accuracy
-        if ((typeChance < mistypeChance)&&(!theTypist.isBurntOut()))
+        if ((Math.random() < mistypeChance)&&(!theTypist.isBurntOut()))
         {
             theTypist.slideBack(SLIDE_BACK_AMOUNT);
             theTypist.setMisTyped(true);
-            System.out.println("player moved back");
             removePrevHighlights(theTypist, pane);
         }
 
         //Depending on typing style, the chance of burning out is affected.
-        double burnoutChance = 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy();
-        if(theTypist.getTypingStyle().equals("Touch Typing")){
-            burnoutChance = burnoutChance * 1.3;
-        }
-        else if(theTypist.getTypingStyle().equals("Phone Thumbs")){
-            burnoutChance = burnoutChance * 1.1;
-        }
+        double burnoutChance = calculateBurnoutChance(theTypist);
 
         // Burnout check — pushing too hard increases burnout risk
-        // (probability scales with accuracy squared, capped at ~0.05)
-        if ((typeChance < burnoutChance)&&(!theTypist.getMisTyped()))
+        if ((Math.random() < burnoutChance)&&(!theTypist.getMisTyped()))
         {
             if(theTypist.getAccessory().equals("Wrist Support")){
                 theTypist.burnOut(BURNOUT_DURATION - 1);
@@ -256,12 +251,22 @@ public class TypingRaceGUI
             }
         }
 
-        // Wait 200ms between turns so the animation is visible
+        //Displays if any typist has mistyped or is burnt out
+            updateTypistsUI();
+
+        // Wait for some milliseconds, depending on keyboard style.
         if(theTypist.keyboardStyle.equals("Ergonomic")){
-            try {
-                TimeUnit.MILLISECONDS.sleep(100);
-            } catch (Exception e) {}
-        }else if(theTypist.keyboardStyle.equals("Touch Screen")){
+            if(caffeineMode == false){
+                try {
+                    TimeUnit.MILLISECONDS.sleep(160);
+                } catch (Exception e) {}
+            }
+            else{
+                try {
+                    TimeUnit.MILLISECONDS.sleep(140);
+                } catch (Exception e) {}
+            }
+        }else if(theTypist.keyboardStyle.equals("Touch Screen") && caffeineMode == false){
             try {
                 TimeUnit.MILLISECONDS.sleep(300);
             } catch (Exception e) {}
@@ -270,6 +275,32 @@ public class TypingRaceGUI
                     TimeUnit.MILLISECONDS.sleep(200);
                 } catch (Exception e) {}
         }
+    }
+
+
+    private double calculateMistypeChance( TypistGUI theTypist){
+        double mistypeChance = theTypist.getAccuracy() * MISTYPE_BASE_CHANCE;
+        if(theTypist.getKeyboardStyle().equals("Ergonomic")){
+            mistypeChance = mistypeChance * 0.8;
+        }else if(theTypist.getKeyboardStyle().equals("Touch Screen")){
+            mistypeChance = mistypeChance * 1.1;
+        }
+
+        if(theTypist.getAccessory().equals("Noise cancelling headphones")){
+            mistypeChance = mistypeChance * 0.9;
+        }
+        return mistypeChance;
+    }
+
+    private double calculateBurnoutChance(TypistGUI theTypist){
+        double burnoutChance = 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy();
+        if(theTypist.getTypingStyle().equals("Touch Typing")){
+            burnoutChance = burnoutChance * 1.3;
+        }
+        else if(theTypist.getTypingStyle().equals("Phone Thumbs")){
+            burnoutChance = burnoutChance * 1.1;
+        }
+        return burnoutChance;
     }
 
     /**
@@ -315,6 +346,18 @@ public class TypingRaceGUI
     }
 
     /**
+     * Calculates the winner's words per minute
+     * Worked out from characters per second
+     */
+    private double calculateWinnerWPM(long StartTime, long EndTime){
+        long timeElapsed = EndTime - StartTime;
+        double seconds = timeElapsed/1000000000;
+        double CPS = passageLength/seconds;
+        double WPM = CPS * 12;
+        return WPM;
+    }
+
+    /**
      * UI for the race
      * Adds all typists and passage to the screen
      * 
@@ -322,6 +365,7 @@ public class TypingRaceGUI
     private JTextPane[] printRace()
     {
         JTextPane[] paneArray = new JTextPane[seatCount];
+        typistLabelArray = new JLabel[seatCount];
         JFrame raceFrame = new JFrame();
         JPanel racePanel = new JPanel();
         BoxLayout boxLayoutManager = new BoxLayout(racePanel, BoxLayout.Y_AXIS);
@@ -332,6 +376,7 @@ public class TypingRaceGUI
         for(int i=0; i<seatCount; i++){
             JPanel typistPanel = new JPanel(new FlowLayout());
             JLabel typistName = new JLabel(typistList[i].getName() +" " + typistList[i].getSymbol());
+            typistLabelArray[i] = typistName;
             typistPanel.add(typistName);
             JTextPane passage = new JTextPane();
             passage.setText(passageSelected);
@@ -340,83 +385,29 @@ public class TypingRaceGUI
             paneArray[i] = passage;
             racePanel.add(typistPanel);
         }
+
+        // cards.add(racePanel);
         raceFrame.add(racePanel);
         raceFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        raceFrame.setSize(800,650);
+        raceFrame.setSize(500,400);
         raceFrame.setVisible(true);
         return paneArray;
     }
 
-    /**
-     * Prints a single typist's lane.
-     *
-     * Examples:
-     *   |          ⌨           | TURBOFINGERS (Accuracy: 0.85)
-     *   |    [~]              | HUNT_N_PECK  (Accuracy: 0.40) BURNT OUT (2 turns)
-     *
-     * Note: Ty forgot to show when a typist has just mistyped. That would
-     * be a nice improvement — perhaps a [<] marker after their symbol.
-     *
-     * @param theTypist the typist whose lane to print
-     */
-    private void printSeat(TypistGUI theTypist)
-    {
-        int spacesBefore = theTypist.getProgress();
-        int spacesAfter  = passageLength - theTypist.getProgress();
-
-        System.out.print('|');
-        multiplePrint(' ', spacesBefore);
-
-        // Always show the typist's symbol so they can be identified on screen.
-        // Append ~ when burnt out so the state is visible without hiding identity.
-        System.out.print(theTypist.getSymbol());
-        if (theTypist.isBurntOut())
-        {
-            System.out.print('~');
-            spacesAfter--; // symbol + ~ together take two characters
-        }
-
-        //Append < when the typist misstypes 
-        if(theTypist.getMisTyped())
-        {
-            System.out.print("<");
-            spacesAfter--; // symbol + < takes two characters
-        }
-
-        multiplePrint(' ', spacesAfter);
-        System.out.print('|');
-        System.out.print(' ');
-
-        // Print name and accuracy
-        if (theTypist.isBurntOut())
-        {
-            System.out.print(theTypist.getName()
-                + " (Accuracy: " + theTypist.getAccuracy() + ")"
-                + " BURNT OUT (" + theTypist.getBurnoutTurnsRemaining() + " turns)");
-        }
-        else if(theTypist.getMisTyped())
-        {
-            System.out.print(theTypist.getName()
-                + " (Accuracy: " + theTypist.getAccuracy() + ")"
-                + " JUST MISTYPED");
-        }
-        else
-        {
-            System.out.print(theTypist.getName()
-                + " (Accuracy: " + theTypist.getAccuracy() + ")");
-        }
-    }
-
-    /**
-     * Prints a character a given number of times.
-     *
-     * @param aChar the character to print
-     * @param times how many times to print it
-     */
-    private void multiplePrint(char aChar, int times)
-    {
-        for(int i=0; i<times; i++){
-            System.out.print(aChar);
+    private void updateTypistsUI(){
+        for(int i=0; i <seatCount; i++){
+            TypistGUI typist = typistList[i];
+            if(typist.getMisTyped()){
+                typistLabelArray[i].setText(typist.getName() + " MISTYPED");
+                typistLabelArray[i].setForeground(Color.red);
+            }else if(typist.isBurntOut()){
+                typistLabelArray[i].setText(typist.getName() + " BURNT OUT " + typist.getBurnoutTurnsRemaining() + " TURNS LEFT");
+                typistLabelArray[i].setForeground(Color.red);
+            }
+            else{
+                typistLabelArray[i].setText(typist.getName() +" " + typist.getSymbol());
+                typistLabelArray[i].setForeground(Color.black);
+            }
         }
     }
 
