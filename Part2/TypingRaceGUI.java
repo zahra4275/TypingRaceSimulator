@@ -121,6 +121,7 @@ public class TypingRaceGUI
     public void startRace()
     {
         Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Color.green);
+        Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.yellow);
         boolean finished = false;
         TypistGUI winner = null;
         double oldAccuracy = 0.0;
@@ -128,13 +129,10 @@ public class TypingRaceGUI
 
         // Display each typist's name and symbol along with the passage.
         JTextPane[] paneArray = printRace();
-        System.out.println("Print done");
 
         // Reset all typists to the start of the passage
-        ResetAllTypists(painter, paneArray);
-        System.out.println("Reset done");
+        ResetAllTypists(painter, paneArray, currentPainter);
         applyDifficultyModifier();
-        System.out.println("Applied done");
 
 
         while (!finished)
@@ -142,7 +140,6 @@ public class TypingRaceGUI
 
             // Advance each typist by one turn
             AdvanceAllTypists(paneArray, painter);
-            System.out.println("player advanced");
 
             // Check if any typist has finished the passage
             for(TypistGUI t: typistList){
@@ -154,10 +151,6 @@ public class TypingRaceGUI
                 }
             }
 
-            // Wait 200ms between turns so the animation is visible
-            // try {
-            //     TimeUnit.MILLISECONDS.sleep(200);
-            // } catch (Exception e) {}
         }
 
         System.out.println("And the Winner is... " + winner.typistName);
@@ -168,13 +161,14 @@ public class TypingRaceGUI
     /**
      * Resets all typists to start of passage.
      */
-    private void ResetAllTypists(Highlighter.HighlightPainter painter, JTextPane[] paneArray){
+    private void ResetAllTypists(Highlighter.HighlightPainter painter, JTextPane[] paneArray, Highlighter.HighlightPainter currentPainter){
         for(int i=0; i<seatCount; i++){
             typistList[i].resetToStart();
             JTextPane pane = paneArray[i];
             Highlighter HL = pane.getHighlighter();
             try {
                 HL.addHighlight(0, 1, painter);
+                HL.addHighlight(0, 1, currentPainter);
             } catch (Exception e) {
             }
         }
@@ -185,7 +179,6 @@ public class TypingRaceGUI
      */
     private void AdvanceAllTypists(JTextPane[] paneArray, Highlighter.HighlightPainter painter){
         for(int i=0; i<seatCount; i++){
-            System.out.println("Player "+i);
             advanceTypist(typistList[i], paneArray[i], painter);
         }
     }
@@ -223,7 +216,6 @@ public class TypingRaceGUI
         {
             theTypist.typeCharacter();
             highlightCharacter(pane, theTypist);
-            System.out.println("player moved forward");
         }
 
         // Depending on keyboard style, the chance of mistyping is affected.
@@ -292,6 +284,7 @@ public class TypingRaceGUI
         int index = theTypist.getProgress();
         try {
             HL.changeHighlight(highlights[0], 0, index+1);
+            HL.changeHighlight(highlights[1], index+1, index+2);
         } catch (Exception e) {
         }
     }
@@ -305,6 +298,7 @@ public class TypingRaceGUI
         int index = theTypist.getProgress();
         try {
             HL.changeHighlight(highlights[0], 0, index);
+            HL.changeHighlight(highlights[1], index, index+1);
         } catch (Exception e) {
         }
     }
