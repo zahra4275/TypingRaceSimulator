@@ -1,5 +1,11 @@
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 import javax.swing.text.DefaultHighlighter;
@@ -23,7 +29,7 @@ public class TypingRaceGUI
     private JPanel cards;
 
     // Accuracy thresholds for mistype and burnout events
-    private final double MISTYPE_BASE_CHANCE = 0.3;
+    private final double MISTYPE_BASE_CHANCE = 0.2;
     private int SLIDE_BACK_AMOUNT = 2;
     private final int BURNOUT_DURATION = 3;
     private boolean caffeineMode = false;
@@ -40,6 +46,7 @@ public class TypingRaceGUI
         selectPassage(passageSelected, customPassage);
         this.seatCount = seatCount;
         this.difficultyModifier = difficultyModifiersChosen;
+        this.cards = new JPanel(new CardLayout());
     }
 
     /**
@@ -138,10 +145,6 @@ public class TypingRaceGUI
             turns++;
             // Advance each typist by one turn
             AdvanceAllTypists(paneArray, turns);
-            
-
-            //Displays if any typist has mistyped or is burnt out
-            // updateTypistsUI();
 
             // Check if any typist has finished the passage
             for(TypistGUI t: typistList){
@@ -155,8 +158,8 @@ public class TypingRaceGUI
                 }
             }
         }
-
-        
+        long timeElapsed = EndTime - StartTime;
+        DisplayStats(timeElapsed, turns);
         System.out.println("Winner: " + winnerWPM + " WPM");
         System.out.println("And the Winner is... " + winner.getName());
         System.out.println("Final accuracy: " + winner.getAccuracy() + " (improved from " + oldAccuracy + " )");
@@ -206,22 +209,19 @@ public class TypingRaceGUI
             caffeineMode = false;
         }
 
-        if (theTypist.isBurntOut())
-        {
+        if (theTypist.isBurntOut()){
             // Recovering from burnout — skip this turn
             theTypist.recoverFromBurnout();
             return;
         }
         if(theTypist.getMisTyped()){
-
             //mistype only lasts one turn, resets at the next turn
             theTypist.setMisTyped(false);
         }
 
         // double typeChance = Math.random();
         // Attempt to type a character
-        if (Math.random() < theTypist.getAccuracy())
-        {
+        if (Math.random() < theTypist.getAccuracy()){
             theTypist.typeCharacter();
             highlightCharacter(pane, theTypist);
         }
@@ -230,8 +230,7 @@ public class TypingRaceGUI
         double mistypeChance = calculateMistypeChance(theTypist);
 
         // Mistype check — the probability should reflect the typist's accuracy
-        if ((Math.random() < mistypeChance)&&(!theTypist.isBurntOut()))
-        {
+        if ((Math.random() < mistypeChance)&&(!theTypist.isBurntOut())){
             theTypist.slideBack(SLIDE_BACK_AMOUNT);
             theTypist.setMisTyped(true);
             removePrevHighlights(theTypist, pane);
@@ -241,18 +240,18 @@ public class TypingRaceGUI
         double burnoutChance = calculateBurnoutChance(theTypist);
 
         // Burnout check — pushing too hard increases burnout risk
-        if ((Math.random() < burnoutChance)&&(!theTypist.getMisTyped()))
-        {
+        if ((Math.random() < burnoutChance)&&(!theTypist.getMisTyped())){
             if(theTypist.getAccessory().equals("Wrist Support")){
                 theTypist.burnOut(BURNOUT_DURATION - 1);
+                theTypist.increaseBurnout();
             }else{
                 theTypist.burnOut(BURNOUT_DURATION);
-                System.out.println("player burnt out");
+                theTypist.increaseBurnout();
             }
         }
 
         //Displays if any typist has mistyped or is burnt out
-            updateTypistsUI();
+        updateTypistsUI();
 
         // Wait for some milliseconds, depending on keyboard style.
         if(theTypist.keyboardStyle.equals("Ergonomic")){
@@ -362,8 +361,7 @@ public class TypingRaceGUI
      * Adds all typists and passage to the screen
      * 
      */
-    private JTextPane[] printRace()
-    {
+    private JTextPane[] printRace(){
         JTextPane[] paneArray = new JTextPane[seatCount];
         typistLabelArray = new JLabel[seatCount];
         JFrame raceFrame = new JFrame();
@@ -386,14 +384,27 @@ public class TypingRaceGUI
             racePanel.add(typistPanel);
         }
 
-        // cards.add(racePanel);
-        raceFrame.add(racePanel);
+        JButton statsButton = new JButton("View Stats");
+        statsButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                CardLayout cardLayout = (CardLayout)(cards.getLayout());
+                cardLayout.next(cards);
+            }
+        });
+        racePanel.add(statsButton);
+
+        cards.add(racePanel);
+        raceFrame.add(cards);
         raceFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         raceFrame.setSize(500,400);
         raceFrame.setVisible(true);
         return paneArray;
     }
 
+    /**
+     * Displays whether the typist has mistyped or burnt out in red colour.
+     */
     private void updateTypistsUI(){
         for(int i=0; i <seatCount; i++){
             TypistGUI typist = typistList[i];
@@ -411,8 +422,71 @@ public class TypingRaceGUI
         }
     }
 
-    public static void main(String[] args) 
-    {
+    /**
+     * Displays each typist's name, WPM, accuracy percentage, number of burnouts, accuracy change after every race.
+     * 
+     * @param timeElapsed the amount of time the race took in nanoseconds
+     * @param turns the total number of turns of the race. 
+     */
+    private void DisplayStats(long timeElapsed, int turns){
+        JTabbedPane statsTabs = new JTabbedPane();
+        JPanel raceStatsPanel = new JPanel();
+        Object[] columnNames = {"Name", "WPM", "Accuracy Percentage", "Burnout Count", "Accuracy Change"};
+        Object[][] tableData = new Object[seatCount][5];
+
+        for(int i=0; i<seatCount; i++){
+            TypistGUI typist = typistList[i];
+            String name = typist.getName();
+            Integer WPM = calculateWPM(typist, timeElapsed);
+            System.out.println("WPM: " + WPM);
+            Integer burnoutCount = typist.getNumBurnout();
+            Double newAccuracy = typist.getAccuracy();
+            Integer accuracyPercent = calcAccuracyPercent(turns, typist);
+            Object[] typistStats = {name, WPM, newAccuracy, burnoutCount, accuracyPercent};
+            tableData[i] = typistStats;
+        }
+        JTable statsTable = new JTable(tableData, columnNames);
+        JScrollPane tableScroll = new JScrollPane(statsTable);
+        statsTable.setFillsViewportHeight(true);
+        raceStatsPanel.setLayout(new BorderLayout());
+        raceStatsPanel.add(statsTable.getTableHeader(), BorderLayout.PAGE_START);
+        raceStatsPanel.add(statsTable, BorderLayout.CENTER);
+        statsTabs.addTab("Race stats", raceStatsPanel); 
+        cards.add(statsTabs);  
+    }
+
+    /**
+     * Calculates words per minute for a typist
+     * 
+     * @param theTypist the typist whose WPM is calculated
+     * @param timeElapsed time the race took in nanoseconds
+     */
+    private int calculateWPM(TypistGUI theTypist, long timeElapsed){
+        double seconds = timeElapsed/1000000000;
+        double CPS = theTypist.getProgress()/seconds; //characters per second
+        double WPM = CPS * 12;
+        System.out.println("WPM: " + WPM);
+        return (int) WPM;
+    }
+
+    /**
+     * Calculates the accuracy percentage of a typist
+     * 
+     * @param turns total turns of the race
+     */
+    private int calcAccuracyPercent(int turns, TypistGUI theTypist){
+        System.out.println("Turns: " + turns);
+        int correctTypes = theTypist.getProgress(); //number of correct characters
+        System.out.println(correctTypes);
+        double accuracyPercent = ((float) correctTypes / turns) * 100;
+        int percentage = (int) accuracyPercent;
+        // BigDecimal percentage = new BigDecimal(Double.toString(accuracyPercent));
+        // percentage.setScale(2, RoundingMode.HALF_UP);
+        System.out.println("AccPercent: " + percentage);
+        return percentage;
+    }
+
+    public static void main(String[] args) {
         TypistGUI t1 = new TypistGUI('@', "player1", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.85);
         TypistGUI t2 = new TypistGUI('!', "player2", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.5);
         TypistGUI[] playersArray = {t1, t2};
