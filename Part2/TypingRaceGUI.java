@@ -4,8 +4,7 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 import javax.swing.text.DefaultHighlighter;
@@ -26,7 +25,7 @@ public class TypingRaceGUI
     private final String[] difficultyModifier;
     private TypistGUI[] typistList;
     private JLabel[] typistLabelArray;
-    private JPanel cards;
+    private final JPanel cards;
 
     // Accuracy thresholds for mistype and burnout events
     private final double MISTYPE_BASE_CHANCE = 0.2;
@@ -42,11 +41,11 @@ public class TypingRaceGUI
      * @param seatCount represents the number of typists (2-6)
      * @param difficultyModifiersChosen holds all difficulty modifiers chosen for the race
      */
-    public TypingRaceGUI(String passageSelected, int seatCount, String[] difficultyModifiersChosen, String customPassage){
+    public TypingRaceGUI(String passageSelected, int seatCount, String[] difficultyModifiersChosen, String customPassage, JPanel cardPanel){
         selectPassage(passageSelected, customPassage);
         this.seatCount = seatCount;
         this.difficultyModifier = difficultyModifiersChosen;
-        this.cards = new JPanel(new CardLayout());
+        this.cards = cardPanel;
     }
 
     /**
@@ -77,13 +76,15 @@ public class TypingRaceGUI
      * Applies appropriate difficulty modifier, if present in the array.
      */
     private void applyDifficultyModifier(){
-        for(String s: difficultyModifier){
-            if(s.equals("AutoCorrect")){
-                applyAutocorrect();
-            }else if(s.equals("Caffeine Mode")){
-                caffeineMode = true;
-            }else if(s.equals("Night Shift")){
-                applyNightShift();
+        if(difficultyModifier != null){
+            for(String s: difficultyModifier){
+                if(s.equals("AutoCorrect")){
+                    applyAutocorrect();
+                }else if(s.equals("Caffeine Mode")){
+                    caffeineMode = true;
+                }else if(s.equals("Night Shift")){
+                    applyNightShift();
+                }
             }
         }
     }
@@ -118,8 +119,7 @@ public class TypingRaceGUI
      * All typists are reset to the beginning, then the simulation runs
      * turn by turn until one typist completes the full passage.
      */
-    public void startRace()
-    {
+    public void startRace(){
         Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Color.green);
         Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.yellow);
         boolean finished = false;
@@ -132,10 +132,15 @@ public class TypingRaceGUI
 
         // Display each typist's name and symbol along with the passage.
         JTextPane[] paneArray = printRace();
+        CardLayout cardLayout = (CardLayout)(cards.getLayout());
+        cardLayout.next(cards);
 
         // Reset all typists to the start of the passage
         ResetAllTypists(painter, paneArray, currentPainter);
+        System.out.println("reset");
         applyDifficultyModifier();
+        System.out.println("applied modifiers");
+
 
         // Start timer
         long StartTime = System.nanoTime();
@@ -358,14 +363,14 @@ public class TypingRaceGUI
 
     /**
      * UI for the race
-     * Adds all typists and passage to the screen
-     * 
+     * Adds all typists and passage to the screen 
      */
-    private JTextPane[] printRace(){
+    public JTextPane[] printRace(){
         JTextPane[] paneArray = new JTextPane[seatCount];
         typistLabelArray = new JLabel[seatCount];
-        JFrame raceFrame = new JFrame();
         JPanel racePanel = new JPanel();
+        racePanel.setSize(600, 500);
+        cards.add(racePanel, "Panel3");
         BoxLayout boxLayoutManager = new BoxLayout(racePanel, BoxLayout.Y_AXIS);
         racePanel.setLayout(boxLayoutManager);
         JLabel titleLabel = new JLabel("Race!");
@@ -379,6 +384,7 @@ public class TypingRaceGUI
             JTextPane passage = new JTextPane();
             passage.setText(passageSelected);
             passage.setEditable(false);
+            passage.setMaximumSize(passage.getPreferredSize());
             typistPanel.add(passage);
             paneArray[i] = passage;
             racePanel.add(typistPanel);
@@ -393,12 +399,10 @@ public class TypingRaceGUI
             }
         });
         racePanel.add(statsButton);
-
-        cards.add(racePanel);
-        raceFrame.add(cards);
-        raceFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        raceFrame.setSize(500,400);
-        raceFrame.setVisible(true);
+        racePanel.revalidate();
+        racePanel.repaint();
+        cards.revalidate();
+        cards.repaint();
         return paneArray;
     }
 
@@ -438,7 +442,6 @@ public class TypingRaceGUI
             TypistGUI typist = typistList[i];
             String name = typist.getName();
             Integer WPM = calculateWPM(typist, timeElapsed);
-            System.out.println("WPM: " + WPM);
             Integer burnoutCount = typist.getNumBurnout();
             Double newAccuracy = typist.getAccuracy();
             Integer accuracyPercent = calcAccuracyPercent(turns, typist);
@@ -452,7 +455,7 @@ public class TypingRaceGUI
         raceStatsPanel.add(statsTable.getTableHeader(), BorderLayout.PAGE_START);
         raceStatsPanel.add(statsTable, BorderLayout.CENTER);
         statsTabs.addTab("Race stats", raceStatsPanel); 
-        cards.add(statsTabs);  
+        cards.add(statsTabs, "panel4");  
     }
 
     /**
@@ -465,7 +468,6 @@ public class TypingRaceGUI
         double seconds = timeElapsed/1000000000;
         double CPS = theTypist.getProgress()/seconds; //characters per second
         double WPM = CPS * 12;
-        System.out.println("WPM: " + WPM);
         return (int) WPM;
     }
 
@@ -475,24 +477,19 @@ public class TypingRaceGUI
      * @param turns total turns of the race
      */
     private int calcAccuracyPercent(int turns, TypistGUI theTypist){
-        System.out.println("Turns: " + turns);
         int correctTypes = theTypist.getProgress(); //number of correct characters
-        System.out.println(correctTypes);
         double accuracyPercent = ((float) correctTypes / turns) * 100;
         int percentage = (int) accuracyPercent;
-        // BigDecimal percentage = new BigDecimal(Double.toString(accuracyPercent));
-        // percentage.setScale(2, RoundingMode.HALF_UP);
-        System.out.println("AccPercent: " + percentage);
         return percentage;
     }
 
-    public static void main(String[] args) {
-        TypistGUI t1 = new TypistGUI('@', "player1", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.85);
-        TypistGUI t2 = new TypistGUI('!', "player2", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.5);
-        TypistGUI[] playersArray = {t1, t2};
-        String[] diffArray = {"Autocorrect", "Night Shift"};
-        TypingRaceGUI race = new TypingRaceGUI("Short", 2, diffArray, null);
-        race.setTypistList(playersArray);
-        race.startRace();
-    }
+    // public static void main(String[] args) {
+        // TypistGUI t1 = new TypistGUI('@', "player1", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.85);
+        // TypistGUI t2 = new TypistGUI('!', "player2", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.5);
+        // TypistGUI[] playersArray = {t1, t2};
+        // String[] diffArray = {"Autocorrect", "Night Shift"};
+        // TypingRaceGUI race = new TypingRaceGUI("Short", 2, diffArray, null);
+        // race.setTypistList(playersArray);
+        // race.startRace();
+    // }
 }
