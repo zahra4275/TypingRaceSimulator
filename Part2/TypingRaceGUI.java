@@ -4,11 +4,11 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
+import javax.swing.Timer;
 
 /**
  * A typing race graphical user interface. Players get to configure the race, choose customisables and race.
@@ -26,6 +26,7 @@ public class TypingRaceGUI
     private TypistGUI[] typistList;
     private JLabel[] typistLabelArray;
     private final JPanel cards;
+    private int turns = 0;
 
     // Accuracy thresholds for mistype and burnout events
     private final double MISTYPE_BASE_CHANCE = 0.2;
@@ -122,13 +123,6 @@ public class TypingRaceGUI
     public void startRace(){
         Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Color.green);
         Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.yellow);
-        boolean finished = false;
-        TypistGUI winner = null;
-        double oldAccuracy = 0.0;
-        final double INCREASE_ACCURACY = 1.02;
-        int turns = 0;
-        long EndTime = 0;
-        double winnerWPM = 0;
 
         // Display each typist's name and symbol along with the passage.
         JTextPane[] paneArray = printRace();
@@ -137,37 +131,57 @@ public class TypingRaceGUI
 
         // Reset all typists to the start of the passage
         ResetAllTypists(painter, paneArray, currentPainter);
-        System.out.println("reset");
-        applyDifficultyModifier();
-        System.out.println("applied modifiers");
+        applyDifficultyModifier(); //Applies effects of any difficulty modifiers
 
-
-        // Start timer
+        // Start time of race
         long StartTime = System.nanoTime();
 
-        while(!finished)
-        {
-            turns++;
-            // Advance each typist by one turn
+        Timer timer = new Timer(100, null);
+
+        timer.addActionListener(e -> {
+            //Advances all typists by one turn
             AdvanceAllTypists(paneArray, turns);
+            turns++;
+
+             //Displays if any typist has mistyped or is burnt out
+            updateTypistsUI();
 
             // Check if any typist has finished the passage
-            for(TypistGUI t: typistList){
-                if(raceFinishedBy(t)){
-                finished = true;
-                winner = t; 
-                oldAccuracy = t.getAccuracy();
-                t.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
-                EndTime = System.nanoTime();
-                winnerWPM = calculateWinnerWPM(StartTime, EndTime);
+            boolean finished = allRaceFinishedby();
+
+            if(finished){
+                ((Timer) e.getSource()).stop();
+                for(TypistGUI t: typistList){
+                    if(raceFinishedBy(t)){
+                        TypistGUI winner = t; 
+                        double oldAccuracy = t.getAccuracy();
+                        double INCREASE_ACCURACY = 1.02;
+                        t.setAccuracy(Math.round(oldAccuracy*INCREASE_ACCURACY*100.0)/100.0);
+                        long EndTime = System.nanoTime(); //end time of race
+                        long timeElapsed = EndTime - StartTime;
+                        DisplayStats(timeElapsed, turns);
+                        break;
+                    }
                 }
             }
+        });
+
+        timer.start();
+
+    }
+
+    /**
+     * Checks if any typist has finished the race
+     * @return boolean if a typist has finished the race
+     */
+    private boolean allRaceFinishedby(){
+        boolean finished = false;
+        for(TypistGUI t: typistList){
+            if(raceFinishedBy(t)){
+                finished = true;
+            }
         }
-        long timeElapsed = EndTime - StartTime;
-        DisplayStats(timeElapsed, turns);
-        System.out.println("Winner: " + winnerWPM + " WPM");
-        System.out.println("And the Winner is... " + winner.getName());
-        System.out.println("Final accuracy: " + winner.getAccuracy() + " (improved from " + oldAccuracy + " )");
+        return finished;
     }
 
     /**
@@ -188,6 +202,8 @@ public class TypingRaceGUI
 
     /**
      * Advances all typists
+     * @param paneArray array of JTextPane which has the passage they are typing
+     * @param turns number of turns so far
      */
     private void AdvanceAllTypists(JTextPane[] paneArray, int turns){
         for(int i=0; i<seatCount; i++){
@@ -211,6 +227,7 @@ public class TypingRaceGUI
     private void advanceTypist(TypistGUI theTypist, JTextPane pane, int turns)
     {
         if(turns > 10){
+            //After 10 turns, the typists no longer have a speed boost
             caffeineMode = false;
         }
 
@@ -224,7 +241,6 @@ public class TypingRaceGUI
             theTypist.setMisTyped(false);
         }
 
-        // double typeChance = Math.random();
         // Attempt to type a character
         if (Math.random() < theTypist.getAccuracy()){
             theTypist.typeCharacter();
@@ -255,9 +271,6 @@ public class TypingRaceGUI
             }
         }
 
-        //Displays if any typist has mistyped or is burnt out
-        updateTypistsUI();
-
         // Wait for some milliseconds, depending on keyboard style.
         if(theTypist.keyboardStyle.equals("Ergonomic")){
             if(caffeineMode == false){
@@ -281,7 +294,13 @@ public class TypingRaceGUI
         }
     }
 
-
+    /**
+     * Calculates chance of a typist mistyping
+     * Multiplies accuracy by the base chance
+     * Depending on keyboard style or accessory, the chance is affected
+     * 
+     * @param theTypist current typist 
+     */
     private double calculateMistypeChance( TypistGUI theTypist){
         double mistypeChance = theTypist.getAccuracy() * MISTYPE_BASE_CHANCE;
         if(theTypist.getKeyboardStyle().equals("Ergonomic")){
@@ -296,6 +315,13 @@ public class TypingRaceGUI
         return mistypeChance;
     }
 
+    /**
+     * Calculates chance of typist burning out
+     * Capped at 0.05
+     * Depending on typing style the chance is affected
+     * 
+     * @param theTypist current typist
+     */
     private double calculateBurnoutChance(TypistGUI theTypist){
         double burnoutChance = 0.05 * theTypist.getAccuracy() * theTypist.getAccuracy();
         if(theTypist.getTypingStyle().equals("Touch Typing")){
@@ -347,18 +373,6 @@ public class TypingRaceGUI
     private boolean raceFinishedBy(TypistGUI theTypist)
     {
         return theTypist.getProgress() >= passageLength;
-    }
-
-    /**
-     * Calculates the winner's words per minute
-     * Worked out from characters per second
-     */
-    private double calculateWinnerWPM(long StartTime, long EndTime){
-        long timeElapsed = EndTime - StartTime;
-        double seconds = timeElapsed/1000000000;
-        double CPS = passageLength/seconds;
-        double WPM = CPS * 12;
-        return WPM;
     }
 
     /**
@@ -427,7 +441,7 @@ public class TypingRaceGUI
     }
 
     /**
-     * Displays each typist's name, WPM, accuracy percentage, number of burnouts, accuracy change after every race.
+     * Displays each typist's name, WPM, accuracy percentage, number of burnouts, accuracy change after every race in a table.
      * 
      * @param timeElapsed the amount of time the race took in nanoseconds
      * @param turns the total number of turns of the race. 
@@ -445,7 +459,7 @@ public class TypingRaceGUI
             Integer burnoutCount = typist.getNumBurnout();
             Double newAccuracy = typist.getAccuracy();
             Integer accuracyPercent = calcAccuracyPercent(turns, typist);
-            Object[] typistStats = {name, WPM, newAccuracy, burnoutCount, accuracyPercent};
+            Object[] typistStats = {name, WPM, accuracyPercent, burnoutCount, newAccuracy};
             tableData[i] = typistStats;
         }
         JTable statsTable = new JTable(tableData, columnNames);
@@ -482,14 +496,4 @@ public class TypingRaceGUI
         int percentage = (int) accuracyPercent;
         return percentage;
     }
-
-    // public static void main(String[] args) {
-        // TypistGUI t1 = new TypistGUI('@', "player1", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.85);
-        // TypistGUI t2 = new TypistGUI('!', "player2", "Touch Typing", "Mechanical", Color.black, "Wrist support", 0.5);
-        // TypistGUI[] playersArray = {t1, t2};
-        // String[] diffArray = {"Autocorrect", "Night Shift"};
-        // TypingRaceGUI race = new TypingRaceGUI("Short", 2, diffArray, null);
-        // race.setTypistList(playersArray);
-        // race.startRace();
-    // }
 }
