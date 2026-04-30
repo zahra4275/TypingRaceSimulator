@@ -33,7 +33,9 @@ public class RaceConfigGUI
         this.configFrame = new JFrame("Typing Race");
         configFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         configFrame.setSize(800,650);
+        configFrame.getContentPane().setBackground(new Color(247, 237, 255));
         this.cardPanel = new JPanel(new CardLayout());
+        cardPanel.setOpaque(false);
         configFrame.add(cardPanel);
     }
 
@@ -44,13 +46,16 @@ public class RaceConfigGUI
     {
         final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Custom"};
         configPanel = new JPanel();
+        configPanel.setOpaque(false);
         configPanel.setBorder(new EmptyBorder(25,25,25,25));
         BoxLayout boxLayoutManager = new BoxLayout(configPanel, BoxLayout.Y_AXIS);
         configPanel.setLayout(boxLayoutManager);
 
         JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
         JLabel titleLabel = new JLabel("Race Configuration");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        titleLabel.setForeground(new Color(124, 90, 174));
         titleLabel.setBorder(new EmptyBorder(0,0,10,0));
         titlePanel.add(titleLabel);
         configPanel.add(titlePanel);
@@ -59,6 +64,7 @@ public class RaceConfigGUI
         JComboBox selectedPassage = choosePassage(configPanel, PASSAGE_OPTIONS);
 
         JPanel customPanel = new JPanel();
+        customPanel.setOpaque(false);
         BoxLayout boxLayout = new BoxLayout(customPanel, BoxLayout.Y_AXIS);
         customPanel.setLayout(boxLayout);
         customPanel.setBorder(new EmptyBorder(10,0,10,0));
@@ -109,6 +115,8 @@ public class RaceConfigGUI
                 TypistList = new TypistGUI[seatCount];
                 CardLayout cardLayout = (CardLayout)(cardPanel.getLayout());
                 cardLayout.next(cardPanel);
+                cardPanel.repaint();
+                cardPanel.revalidate();
             }
         });
         // Adds the race configuration panel to the panel that has card layout.
@@ -125,6 +133,7 @@ public class RaceConfigGUI
      */
     private JComboBox choosePassage(JPanel configPanel, String[] PASSAGE_OPTIONS){
         JPanel passagePanel = new JPanel();
+        passagePanel.setOpaque(false);
         BoxLayout boxLayout = new BoxLayout(passagePanel, BoxLayout.Y_AXIS);
         passagePanel.setLayout(boxLayout);
         passagePanel.setBorder(new EmptyBorder(10,0,10,0));
@@ -149,6 +158,7 @@ public class RaceConfigGUI
      */
     private JSlider chooseSeatCount(JPanel configPanel){
         JPanel seatPanel = new JPanel(new BorderLayout());
+        seatPanel.setOpaque(false);
         BoxLayout boxLayout = new BoxLayout(seatPanel, BoxLayout.Y_AXIS);
         seatPanel.setLayout(boxLayout);
         seatPanel.setBorder(new EmptyBorder(10,0,10,0));
@@ -158,6 +168,7 @@ public class RaceConfigGUI
         countLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         seatPanel.add(countLabel);
         JSlider seatSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 50);
+        seatSlider.setBackground(new Color(247, 237, 255));
         seatSlider.setMaximum(6);
         seatSlider.setMinimum(2);
         seatSlider.setMajorTickSpacing(2);
@@ -179,6 +190,7 @@ public class RaceConfigGUI
      */
     private JCheckBox[] chooseDiffModifiers(JPanel configPanel){
         JPanel diffPanel = new JPanel();
+        diffPanel.setOpaque(false);
         BoxLayout boxLayout = new BoxLayout(diffPanel, BoxLayout.Y_AXIS);
         diffPanel.setLayout(boxLayout);
         diffPanel.setBorder(new EmptyBorder(10,0,10,0));
@@ -188,17 +200,20 @@ public class RaceConfigGUI
         difficultyLabel.setFont(new Font("Arial", Font.BOLD, 20));
         diffPanel.add(difficultyLabel);
 
-        JPanel diffLabelPanel = new JPanel(new FlowLayout());
         JLabel effectLabel1 = new JLabel("AutoCorrect: halves slide back amount. | Caffeine Mode: speed -10%, burnout +10%. | Night Shift: accuracy -0.07.");
         effectLabel1.setFont(new Font("Arial", Font.PLAIN, 12));
-        diffLabelPanel.add(effectLabel1);
-        diffLabelPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        diffPanel.add(diffLabelPanel);
+        effectLabel1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        diffPanel.add(effectLabel1);
 
         JPanel diffCheckPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 5));
+        diffCheckPanel.setOpaque(false);
         JCheckBox diffOption1 = new JCheckBox("AutoCorrect");
         JCheckBox diffOption2 = new JCheckBox("Caffeine Mode");
         JCheckBox diffOption3 = new JCheckBox("Night Shift");
+        //Styling
+        diffOption1.setBackground(new Color(247, 237, 255));
+        diffOption2.setBackground(new Color(247, 237, 255));
+        diffOption3.setBackground(new Color(247, 237, 255));
         diffOption1.setFont(new Font("Arial", Font.PLAIN, 16));
         diffOption2.setFont(new Font("Arial", Font.PLAIN, 16));
         diffOption3.setFont(new Font("Arial", Font.PLAIN, 16));
@@ -207,6 +222,7 @@ public class RaceConfigGUI
         diffCheckPanel.add(diffOption3);
         diffCheckPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         diffPanel.add(diffCheckPanel);
+        //Array of checkboxes
         JCheckBox[] boxArray = {diffOption1, diffOption2, diffOption3};
         configPanel.add(diffPanel);
         return boxArray;
@@ -220,15 +236,23 @@ public class RaceConfigGUI
         final String[] KEYBOARD_OPTIONS = {"None" ,"Ergonomic", "Mechanical", "Touch Screen"};
         final String[] ACCESSORY_OPTIONS ={ "None","Wrist support", "Energy drink", "Noise cancelling headphones"};
         JPanel customisePanel = new JPanel();
+        //Styling
+        customisePanel.setBackground(new Color(247, 237, 255));
         customisePanel.setBorder(new EmptyBorder(30,30,30,30));
         BoxLayout boxLayoutManager = new BoxLayout(customisePanel, BoxLayout.Y_AXIS);
         customisePanel.setLayout(boxLayoutManager);
+        //Add a scrollbar
         JScrollPane panelScrollPane = new JScrollPane(customisePanel);
+        panelScrollPane.setOpaque(false);
 
+        JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
         JLabel titleLabel = new JLabel("Customise Typists");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
         titleLabel.setBorder(new EmptyBorder(10,0,10,0));
-        customisePanel.add(titleLabel);
+        titleLabel.setForeground(new Color(124, 90, 174));
+        titlePanel.add(titleLabel);
+        customisePanel.add(titlePanel);
 
         // Displays area to enter name
         JTextField nameField = enterTypistName(customisePanel);
@@ -269,10 +293,6 @@ public class RaceConfigGUI
                 }
                 else{
                     Race.setTypistList(TypistList);
-                    System.out.println("Card count 1: " + cardPanel.getComponentCount());
-                    for(Component c: cardPanel.getComponents()){
-                        System.out.println(c);
-                    }
                     Race.startRace();
                 }
             }
@@ -305,24 +325,30 @@ public class RaceConfigGUI
     public void resetAllFields(JComboBox typingStyleBox, JComboBox keyboardBox, JTextField symbolBox, JColorChooser colourChooser, JComboBox accessoryBox, JTextField nameField){
         typingStyleBox.setSelectedIndex(0);
         keyboardBox.setSelectedIndex(0);
-        symbolBox.setText(" ");
+        symbolBox.setText("");
         colourChooser.setColor(Color.WHITE);
         accessoryBox.setSelectedIndex(0);
-        nameField.setText(" ");
+        nameField.setText("");
     }
 
     /**
      * Displays text area to enter typist's name.
      */
     private JTextField enterTypistName(JPanel customisePanel){
-        JPanel namePanel = new JPanel(new BorderLayout());
+        JPanel namePanel = new JPanel();
+        namePanel.setOpaque(false);
+        BoxLayout boxLayout = new BoxLayout(namePanel, BoxLayout.Y_AXIS);
+        namePanel.setLayout(boxLayout);
         JLabel nameLabel = new JLabel("Enter typist name");
         nameLabel.setBorder(new EmptyBorder(10,0,10,0));
         nameLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        namePanel.add(nameLabel, BorderLayout.NORTH);
+        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        namePanel.add(nameLabel);
 
-        JTextField nameField = new JTextField();
-        namePanel.add(nameField, BorderLayout.SOUTH);
+        JTextField nameField = new JTextField(20);
+        nameField.setMaximumSize(nameField.getPreferredSize());
+        nameField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        namePanel.add(nameField);
         customisePanel.add(namePanel);
         return nameField;
     }
@@ -334,19 +360,26 @@ public class RaceConfigGUI
      * @param typingStyleOptions array that holds all options for typing style.
      */
     private JComboBox chooseTypingStyle(JPanel customisePanel, String[] typingStyleOptions){
-        JPanel typingPanel = new JPanel(new BorderLayout());
+        JPanel typingPanel = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(typingPanel, BoxLayout.Y_AXIS);
+        typingPanel.setLayout(boxLayout);
+        typingPanel.setOpaque(false);
         JLabel typingLabel = new JLabel("Choose typing style:");
         typingLabel.setBorder(new EmptyBorder(10,0,10,0));
         typingLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        typingPanel.add(typingLabel, BorderLayout.NORTH);
+        typingLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        typingPanel.add(typingLabel);
 
         JLabel effectLabel1 = new JLabel("Touch Typing: acc +10%, burnout +30%  |  Phone Thumbs: acc -5%, burnout +10%  |  HuntNPeck: Normal");
-        
-        typingPanel.add(effectLabel1, BorderLayout.CENTER);
+        effectLabel1.setFont(new Font("Arial", Font.PLAIN, 12));
+        effectLabel1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        typingPanel.add(effectLabel1);
 
         JComboBox<String> styleSelect = new JComboBox<>(typingStyleOptions);
+        styleSelect.setMaximumSize(styleSelect.getPreferredSize());
         styleSelect.setBackground(Color.WHITE);
-        typingPanel.add(styleSelect, BorderLayout.SOUTH);
+        styleSelect.setAlignmentX(Component.CENTER_ALIGNMENT);
+        typingPanel.add(styleSelect);
         customisePanel.add(typingPanel);
         return styleSelect;
     }
@@ -358,19 +391,26 @@ public class RaceConfigGUI
      * @param typingStyleOptions array that holds all keyboard types, the user can choose.
      */
     private JComboBox chooseKeyboardType(JPanel customisePanel, String[] KEYBOARD_OPTIONS){
-        JPanel keyboardPanel = new JPanel(new BorderLayout());
+        JPanel keyboardPanel = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(keyboardPanel, BoxLayout.Y_AXIS);
+        keyboardPanel.setLayout(boxLayout);
+        keyboardPanel.setOpaque(false);
         JLabel keyboardLabel = new JLabel("Choose your keyboard type:");
         keyboardLabel.setBorder(new EmptyBorder(10,0,10,0));
         keyboardLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        keyboardPanel.add(keyboardLabel, BorderLayout.NORTH);
+        keyboardLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        keyboardPanel.add(keyboardLabel);
 
         JLabel effectLabel1 = new JLabel("Ergonomic: mistype -20% (fastest)  |  Mechanical: Normal  |  Touchscreen: mistype +10% (slowest)");
-
-        keyboardPanel.add(effectLabel1, BorderLayout.CENTER);
+        effectLabel1.setFont(new Font("Arial", Font.PLAIN, 12));
+        effectLabel1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        keyboardPanel.add(effectLabel1);
 
         JComboBox<String> keyboardSelect = new JComboBox<>(KEYBOARD_OPTIONS);
+        keyboardSelect.setMaximumSize(keyboardSelect.getPreferredSize());
         keyboardSelect.setBackground(Color.WHITE);
-        keyboardPanel.add(keyboardSelect, BorderLayout.SOUTH);
+        keyboardSelect.setAlignmentX(Component.CENTER_ALIGNMENT);
+        keyboardPanel.add(keyboardSelect);
         customisePanel.add(keyboardPanel);
         return keyboardSelect;
     }
@@ -382,15 +422,21 @@ public class RaceConfigGUI
      * @param typingStyleOptions array that holds all the symbols the user can choose from.
      */
     private JTextField chooseSymbol(JPanel customisePanel){
-        JPanel symbolPanel = new JPanel(new BorderLayout());
+        JPanel symbolPanel = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(symbolPanel, BoxLayout.Y_AXIS);
+        symbolPanel.setLayout(boxLayout);
+        symbolPanel.setOpaque(false);
         JLabel symbolLabel = new JLabel("Choose your symbol:");
+        symbolLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         symbolLabel.setBorder(new EmptyBorder(10,0,10,0));
         symbolLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        symbolPanel.add(symbolLabel, BorderLayout.NORTH);
+        symbolPanel.add(symbolLabel);
 
         JTextField symbolSelect = new JTextField(1);
+        symbolSelect.setMaximumSize(symbolSelect.getPreferredSize());
+        symbolSelect.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        symbolPanel.add(symbolSelect, BorderLayout.SOUTH);
+        symbolPanel.add(symbolSelect);
         customisePanel.add(symbolPanel);
         return symbolSelect;
     }
@@ -401,14 +447,20 @@ public class RaceConfigGUI
      * @param customisePanel panel that holds all components for customising typists.
      */
     private JColorChooser chooseColour(JPanel customisePanel){
-        JPanel colourPanel = new JPanel(new BorderLayout());
+        JPanel colourPanel = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(colourPanel, BoxLayout.Y_AXIS);
+        colourPanel.setLayout(boxLayout);
+        colourPanel.setOpaque(false);
         JLabel colourLabel = new JLabel("Choose your colour:");
         colourLabel.setBorder(new EmptyBorder(10,0,10,0));
         colourLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        colourPanel.add(colourLabel, BorderLayout.NORTH);
+        colourLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        colourPanel.add(colourLabel);
 
         JColorChooser chooseColour = new JColorChooser();
+        chooseColour.setOpaque(false);
         chooseColour.setPreviewPanel(new JPanel());
+        chooseColour.setAlignmentX(Component.CENTER_ALIGNMENT);
         AbstractColorChooserPanel[] colorPanels = chooseColour.getChooserPanels();
         for(AbstractColorChooserPanel p: colorPanels){
             if(!p.getDisplayName().equals("Swatches")){
@@ -416,7 +468,7 @@ public class RaceConfigGUI
             }
         }
 
-        colourPanel.add(chooseColour, BorderLayout.SOUTH);
+        colourPanel.add(chooseColour);
         customisePanel.add(colourPanel);
         return chooseColour;
     }
@@ -428,23 +480,25 @@ public class RaceConfigGUI
      * @param typingStyleOptions array that holds all accessories the user can choose from.
      */
     private JComboBox chooseAccessory(JPanel customisePanel, String[] ACCESSORIES_OPTIONS){
-        JPanel accPanel = new JPanel(new BorderLayout());
+        JPanel accPanel = new JPanel();
+        BoxLayout boxLayout = new BoxLayout(accPanel, BoxLayout.Y_AXIS);
+        accPanel.setLayout(boxLayout);
+        accPanel.setOpaque(false);
         JLabel accLabel = new JLabel("Choose your accessories:");
         accLabel.setBorder(new EmptyBorder(10,0,10,0));
         accLabel.setFont(new Font("Arial", Font.PLAIN, 15));
-        accPanel.add(accLabel, BorderLayout.NORTH);
+        accLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        accPanel.add(accLabel);
 
-        JPanel effectPanel = new JPanel(new FlowLayout());
-        JLabel effectLabel1 = new JLabel("Wrist Support: burnout -1");
-        JLabel effectLabel2 = new JLabel("Energy Drink: increases accuracy in first half, decreases accuracy in last half");
-        JLabel effectLabel3 = new JLabel("Noise Cancelling Headphones: mistype -10%");
+        JLabel effectLabel1 = new JLabel("Wrist Support: burnout -1  |  Energy Drink: first half acc+10%, last half acc-10%  |  Noise Cancelling Headphones: mistype -10%");
 
-        effectPanel.add(effectLabel1);
-        effectPanel.add(effectLabel2);
-        effectPanel.add(effectLabel3);
-        accPanel.add(effectPanel, BorderLayout.CENTER);
+        effectLabel1.setFont(new Font("Arial", Font.PLAIN, 12));
+        effectLabel1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        accPanel.add(effectLabel1);
 
         JComboBox<String> accSelect = new JComboBox<>(ACCESSORIES_OPTIONS);
+        accSelect.setMaximumSize(accSelect.getPreferredSize());
+        accSelect.setAlignmentX(Component.CENTER_ALIGNMENT);
         accSelect.setBackground(Color.WHITE);
         accPanel.add(accSelect);
         customisePanel.add(accPanel);

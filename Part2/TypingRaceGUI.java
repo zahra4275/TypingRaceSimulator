@@ -2,19 +2,21 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.JTableHeader;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.Highlighter;
-import javax.swing.Timer;
 
 /**
  * A typing race graphical user interface. Players get to configure the race, choose customisables and race.
  * 
  * @author Zahra Bint Afzal Asghar
- * @version 0.1
+ * @version 1.0
  */
 
 public class TypingRaceGUI
@@ -27,6 +29,7 @@ public class TypingRaceGUI
     private JLabel[] typistLabelArray;
     private final JPanel cards;
     private int turns = 0;
+    private JPanel racePanel;
 
     // Accuracy thresholds for mistype and burnout events
     private final double MISTYPE_BASE_CHANCE = 0.2;
@@ -115,14 +118,26 @@ public class TypingRaceGUI
         this.typistList = typistList;
     }
 
+    private void applyEnergyDrink(int turns){
+        for(TypistGUI t: typistList){
+            if(t.getAccessory().equals("Energy drink")){
+                if(turns == 0){
+                    t.setAccuracy(t.getAccuracy()*1.1);
+                }else if(turns == passageLength/2){
+                    t.setAccuracy(t.getAccuracy()*0.9);
+                }
+            }
+        }
+    }
+
     /**
      * Starts the typing race.
      * All typists are reset to the beginning, then the simulation runs
      * turn by turn until one typist completes the full passage.
      */
     public void startRace(){
-        Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Color.green);
-        Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.yellow);
+        Highlighter.HighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(Color.GREEN);
+        Highlighter.HighlightPainter currentPainter = new DefaultHighlighter.DefaultHighlightPainter(Color.YELLOW);
 
         // Display each typist's name and symbol along with the passage.
         JTextPane[] paneArray = printRace();
@@ -139,6 +154,8 @@ public class TypingRaceGUI
         Timer timer = new Timer(100, null);
 
         timer.addActionListener(e -> {
+            //Applies energy drink effects(increase accuracy in first half, decrease in second half)
+            applyEnergyDrink(turns);
             //Advances all typists by one turn
             AdvanceAllTypists(paneArray, turns);
             turns++;
@@ -160,6 +177,7 @@ public class TypingRaceGUI
                         long EndTime = System.nanoTime(); //end time of race
                         long timeElapsed = EndTime - StartTime;
                         DisplayStats(timeElapsed, turns);
+                        DisplayWinner(winner);
                         break;
                     }
                 }
@@ -167,7 +185,6 @@ public class TypingRaceGUI
         });
 
         timer.start();
-
     }
 
     /**
@@ -275,21 +292,21 @@ public class TypingRaceGUI
         if(theTypist.keyboardStyle.equals("Ergonomic")){
             if(caffeineMode == false){
                 try {
-                    TimeUnit.MILLISECONDS.sleep(160);
+                    TimeUnit.MILLISECONDS.sleep(60);
                 } catch (Exception e) {}
             }
             else{
                 try {
-                    TimeUnit.MILLISECONDS.sleep(140);
+                    TimeUnit.MILLISECONDS.sleep(40);
                 } catch (Exception e) {}
             }
         }else if(theTypist.keyboardStyle.equals("Touch Screen") && caffeineMode == false){
             try {
-                TimeUnit.MILLISECONDS.sleep(300);
+                TimeUnit.MILLISECONDS.sleep(100);
             } catch (Exception e) {}
         }else{
             try {
-                    TimeUnit.MILLISECONDS.sleep(200);
+                    TimeUnit.MILLISECONDS.sleep(80);
                 } catch (Exception e) {}
         }
     }
@@ -382,37 +399,39 @@ public class TypingRaceGUI
     public JTextPane[] printRace(){
         JTextPane[] paneArray = new JTextPane[seatCount];
         typistLabelArray = new JLabel[seatCount];
-        JPanel racePanel = new JPanel();
+        racePanel = new JPanel();
+        racePanel.setBorder(new EmptyBorder(30,30,30,30));
+        racePanel.setBackground(new Color(247, 237, 255));
         racePanel.setSize(600, 500);
         cards.add(racePanel, "Panel3");
         BoxLayout boxLayoutManager = new BoxLayout(racePanel, BoxLayout.Y_AXIS);
         racePanel.setLayout(boxLayoutManager);
+        JPanel titlePanel = new JPanel();
+        titlePanel.setBackground(new Color(247, 237, 255));
         JLabel titleLabel = new JLabel("Race!");
-        racePanel.add(titleLabel);
+        titleLabel.setForeground(new Color(124, 90, 174));
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        titleLabel.setBorder(new EmptyBorder(0,0,10,0));
+        titlePanel.add(titleLabel);
+        racePanel.add(titlePanel);
         
         for(int i=0; i<seatCount; i++){
             JPanel typistPanel = new JPanel(new FlowLayout());
+            typistPanel.setOpaque(false);
             JLabel typistName = new JLabel(typistList[i].getName() +" " + typistList[i].getSymbol());
+            typistName.setFont(new Font("Arial", Font.BOLD, 25));
             typistLabelArray[i] = typistName;
             typistPanel.add(typistName);
             JTextPane passage = new JTextPane();
             passage.setText(passageSelected);
             passage.setEditable(false);
             passage.setMaximumSize(passage.getPreferredSize());
+            passage.setBorder(new EmptyBorder(10,10,10,10));;
             typistPanel.add(passage);
             paneArray[i] = passage;
             racePanel.add(typistPanel);
         }
 
-        JButton statsButton = new JButton("View Stats");
-        statsButton.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e){
-                CardLayout cardLayout = (CardLayout)(cards.getLayout());
-                cardLayout.next(cards);
-            }
-        });
-        racePanel.add(statsButton);
         racePanel.revalidate();
         racePanel.repaint();
         cards.revalidate();
@@ -428,14 +447,14 @@ public class TypingRaceGUI
             TypistGUI typist = typistList[i];
             if(typist.getMisTyped()){
                 typistLabelArray[i].setText(typist.getName() + " MISTYPED");
-                typistLabelArray[i].setForeground(Color.red);
+                typistLabelArray[i].setForeground(Color.RED);
             }else if(typist.isBurntOut()){
                 typistLabelArray[i].setText(typist.getName() + " BURNT OUT " + typist.getBurnoutTurnsRemaining() + " TURNS LEFT");
-                typistLabelArray[i].setForeground(Color.red);
+                typistLabelArray[i].setForeground(Color.RED);
             }
             else{
                 typistLabelArray[i].setText(typist.getName() +" " + typist.getSymbol());
-                typistLabelArray[i].setForeground(Color.black);
+                typistLabelArray[i].setForeground(Color.BLACK);
             }
         }
     }
@@ -449,6 +468,7 @@ public class TypingRaceGUI
     private void DisplayStats(long timeElapsed, int turns){
         JTabbedPane statsTabs = new JTabbedPane();
         JPanel raceStatsPanel = new JPanel();
+        raceStatsPanel.setOpaque(false);
         Object[] columnNames = {"Name", "WPM", "Accuracy Percentage", "Burnout Count", "Accuracy Change"};
         Object[][] tableData = new Object[seatCount][5];
 
@@ -463,7 +483,12 @@ public class TypingRaceGUI
             tableData[i] = typistStats;
         }
         JTable statsTable = new JTable(tableData, columnNames);
+        statsTable.setFont(new Font("Arial", Font.PLAIN, 14));
         JScrollPane tableScroll = new JScrollPane(statsTable);
+        JTableHeader tableHeader = statsTable.getTableHeader();
+        tableHeader.setBackground(new Color(85, 57, 128));
+        tableHeader.setForeground(Color.WHITE);
+        tableHeader.setFont(new Font("Arial", Font.PLAIN, 15));
         statsTable.setFillsViewportHeight(true);
         raceStatsPanel.setLayout(new BorderLayout());
         raceStatsPanel.add(statsTable.getTableHeader(), BorderLayout.PAGE_START);
@@ -495,5 +520,27 @@ public class TypingRaceGUI
         double accuracyPercent = ((float) correctTypes / turns) * 100;
         int percentage = (int) accuracyPercent;
         return percentage;
+    }
+
+    private void DisplayWinner(TypistGUI winner){
+        JPanel winnerPanel = new JPanel();
+        winnerPanel.setOpaque(false);
+        JLabel winnerLabel = new JLabel("The winner is ... " + winner.getName());
+        winnerLabel.setFont(new Font("Arial", Font.BOLD, 30));
+        winnerLabel.setForeground(Color.RED);
+        winnerPanel.add(winnerLabel);
+        racePanel.add(winnerPanel);
+
+        JButton statsButton = new JButton("View Stats");
+        statsButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                CardLayout cardLayout = (CardLayout)(cards.getLayout());
+                cardLayout.next(cards);
+            }
+        });
+        racePanel.add(statsButton);
+        racePanel.revalidate();
+        racePanel.repaint();
     }
 }
