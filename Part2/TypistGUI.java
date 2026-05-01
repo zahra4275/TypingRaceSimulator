@@ -16,6 +16,7 @@ public class TypistGUI
     int progress = 0;
     boolean burntout = false;
     int burnoutTurnsLeft = 0;
+    int numBurnout = 0;
     double accuracy;
     boolean misTyped = false;
     String typingStyle;
@@ -55,7 +56,6 @@ public class TypistGUI
     private void ApplyTypingStyle(){
         if(typingStyle.equals("Touch Typing")){
             accuracy = accuracy * 1.1;
-            System.out.println(accuracy);
         }
         else if(typingStyle.equals("Phone Thumbs")){
             accuracy = accuracy * 0.95;
@@ -84,15 +84,36 @@ public class TypistGUI
     }
 
     /**
+     * Returns Typist's colour
+     */
+    public Color getColour(){
+        return typistColor;
+    }
+
+    /**
+     * Returns number of times typist burnt out
+     */
+    public int getNumBurnout(){
+        return numBurnout;
+    }
+
+    /**
+     * Increases number out burnt out times
+     */
+    public void increaseBurnout(){
+        numBurnout++;
+    }
+
+    /**
      * Sets this typist into a burnout state for a given number of turns.
      * A burnt-out typist cannot type until their burnout has worn off.
      *
      * @param turns the number of turns the burnout will last
      */
-    public void burnOut(int turns)
-    {
+    public void burnOut(int turns){
         burntout = true;
         burnoutTurnsLeft = turns;
+        numBurnout++;
     }
 
     /**
@@ -100,8 +121,7 @@ public class TypistGUI
      * When the counter reaches zero, the typist recovers automatically.
      * Has no effect if the typist is not currently burnt out.
      */
-    public void recoverFromBurnout()
-    {
+    public void recoverFromBurnout(){
         if(burntout == true){
             if(burnoutTurnsLeft == 0){
                 burntout = false;
@@ -117,8 +137,7 @@ public class TypistGUI
      *
      * @return accuracy as a double between 0.0 and 1.0
      */
-    public double getAccuracy()
-    {
+    public double getAccuracy(){
         return accuracy; 
     }
 
@@ -129,8 +148,7 @@ public class TypistGUI
      *
      * @return progress as a non-negative integer
      */
-    public int getProgress()
-    {
+    public int getProgress(){
         return progress;  
     }
 
@@ -139,8 +157,7 @@ public class TypistGUI
      *
      * @return the typist's name as a String
      */
-    public String getName()
-    {
+    public String getName(){
         return typistName; 
     }
 
@@ -149,8 +166,7 @@ public class TypistGUI
      *
      * @return the typist's symbol as a char
      */
-    public char getSymbol()
-    {
+    public char getSymbol(){
         return typistSymbol; 
     }
 
@@ -160,8 +176,7 @@ public class TypistGUI
      *
      * @return burnout turns remaining as a non-negative integer
      */
-    public int getBurnoutTurnsRemaining()
-    {
+    public int getBurnoutTurnsRemaining(){
         if(burntout == false){
             return 0;
         }
@@ -170,13 +185,17 @@ public class TypistGUI
         } 
     }
 
-    public boolean getMisTyped()
-    {
+    /**
+     * Returns value of mistyped field
+     */
+    public boolean getMisTyped(){
         return misTyped;
     }
 
-    public void setMisTyped(boolean ifMisTyped)
-    {
+    /**
+     * Sets mistyped field
+     */
+    public void setMisTyped(boolean ifMisTyped){
         misTyped = ifMisTyped;
     }
 
@@ -184,8 +203,7 @@ public class TypistGUI
      * Resets the typist to their initial state, ready for a new race.
      * Progress returns to zero, burnout is cleared entirely.
      */
-    public void resetToStart()
-    {
+    public void resetToStart(){
         progress = 0;
         burntout = false;
         burnoutTurnsLeft= 0;
@@ -196,8 +214,7 @@ public class TypistGUI
      *
      * @return true if burnt out
      */
-    public boolean isBurntOut()
-    {
+    public boolean isBurntOut(){
         return burntout; 
     }
 
@@ -205,8 +222,7 @@ public class TypistGUI
      * Advances the typist forward by one character along the passage.
      * Should only be called when the typist is not burnt out.
      */
-    public void typeCharacter()
-    {
+    public void typeCharacter(){
         progress++;
     }
 
@@ -216,8 +232,7 @@ public class TypistGUI
      *
      * @param amount the number of characters to slide back (must be positive)
      */
-    public void slideBack(int amount)
-    {
+    public void slideBack(int amount){
         if(amount > 0){
             if(amount > progress){
                 progress = 0;
@@ -252,10 +267,7 @@ public class TypistGUI
      *
      * @param newSymbol the new symbol character
      */
-    public void setSymbol(char newSymbol)
-    {
+    public void setSymbol(char newSymbol){
         typistSymbol = newSymbol;
     }
-
-
 }
