@@ -420,6 +420,7 @@ public class TypingRaceGUI
             typistPanel.setOpaque(false);
             JLabel typistName = new JLabel(typistList[i].getName() +" " + typistList[i].getSymbol());
             typistName.setFont(new Font("Arial", Font.BOLD, 25));
+            typistName.setForeground(typistList[i].getColour());
             typistLabelArray[i] = typistName;
             typistPanel.add(typistName);
             JTextPane passage = new JTextPane();
@@ -440,7 +441,7 @@ public class TypingRaceGUI
     }
 
     /**
-     * Displays whether the typist has mistyped or burnt out in red colour.
+     * Displays whether the typist has mistyped or burnt out in red colour each turn.
      */
     private void updateTypistsUI(){
         for(int i=0; i <seatCount; i++){
@@ -454,7 +455,7 @@ public class TypingRaceGUI
             }
             else{
                 typistLabelArray[i].setText(typist.getName() +" " + typist.getSymbol());
-                typistLabelArray[i].setForeground(Color.BLACK);
+                typistLabelArray[i].setForeground(typist.getColour());
             }
         }
     }
@@ -522,6 +523,11 @@ public class TypingRaceGUI
         return percentage;
     }
 
+    /**
+     * Displays the winner of the race when it is finished
+     * 
+     * @param winner typist who won the race
+     */
     private void DisplayWinner(TypistGUI winner){
         JPanel winnerPanel = new JPanel();
         winnerPanel.setOpaque(false);
