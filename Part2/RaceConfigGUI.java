@@ -42,7 +42,7 @@ public class RaceConfigGUI
     /**
      * UI design for race configuration options. Choosing passage length, how many typists and difficulty modifiers.
      */
-    private void showRaceConfig()
+    private void startRaceGUI()
     {
         final String[] PASSAGE_OPTIONS = {"Short", "Medium", "Long", "Custom"};
         configPanel = new JPanel();
@@ -104,6 +104,7 @@ public class RaceConfigGUI
                 }
                 String[] difficultyChosenArray = new String[index];
                 int arindex = 0;
+                //checks which checkbox is selected
                 for(JCheckBox c: diffArray){
                     if(c.isSelected()){
                         String modifier = c.getText();
@@ -230,6 +231,7 @@ public class RaceConfigGUI
 
     /**
      * UI for customising typists 
+     * Displays all options
      */
     private void showCustomiseTypist(){
         final String[] TYPING_STYLE_OPTIONS = {"None","Touch Typing", "Phone Thumbs", "HuntNPeck"};
@@ -246,16 +248,28 @@ public class RaceConfigGUI
         panelScrollPane.setOpaque(false);
 
         JPanel titlePanel = new JPanel();
+        BoxLayout boxLayoutManag = new BoxLayout(titlePanel, BoxLayout.Y_AXIS);
+        titlePanel.setLayout(boxLayoutManag);
         titlePanel.setOpaque(false);
         JLabel titleLabel = new JLabel("Customise Typists");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 30));
         titleLabel.setBorder(new EmptyBorder(10,0,10,0));
         titleLabel.setForeground(new Color(124, 90, 174));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         titlePanel.add(titleLabel);
+
+        JLabel playerNumLabel = new JLabel("Player " + (pageIndex + 1));
+        playerNumLabel.setBorder(new EmptyBorder(10,0,10,0));
+        playerNumLabel.setForeground(new Color(124, 90, 174));
+        playerNumLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        titlePanel.add(playerNumLabel);
         customisePanel.add(titlePanel);
 
         // Displays area to enter name
         JTextField nameField = enterTypistName(customisePanel);
+
+        //Displays area to input accuracy
+        JTextField accuracyField = chooseAccuracy(customisePanel);
 
         // Displays typing style options
         JComboBox typingStyleBox = chooseTypingStyle(customisePanel, TYPING_STYLE_OPTIONS);
@@ -284,12 +298,14 @@ public class RaceConfigGUI
                 char symbol = symbolChosen.charAt(0);             
                 Color colourChosen = colourChooser.getColor();
                 String accChosen = accessoryBox.getSelectedItem().toString();
+                double accuracy = Double.parseDouble(accuracyField.getText());
 
-                TypistGUI typist = new TypistGUI(symbol, nameEntered, styleChosen, keyboardChosen, colourChosen, accChosen, 0.6);
+                TypistGUI typist = new TypistGUI(symbol, nameEntered, styleChosen, keyboardChosen, colourChosen, accChosen, accuracy);
                 addTypist(typist);
                 if(pageIndex < seatCount-1){
-                    resetAllFields(typingStyleBox, keyboardBox, symbolBox, colourChooser, accessoryBox, nameField);
+                    resetAllFields(typingStyleBox, keyboardBox, symbolBox, colourChooser, accessoryBox, nameField, accuracyField);
                     increaseIndex();
+                    playerNumLabel.setText("Player " + (pageIndex + 1));
                 }
                 else{
                     Race.setTypistList(TypistList);
@@ -321,18 +337,23 @@ public class RaceConfigGUI
      * @param symbolBox input area for entering typist symbol
      * @param colourChooser color chooser to choose typist colour, reset to default colour, white.
      * @param accessoryBox input area to choose accessories.
+     * @param nameField text field for entering typist's name
+     * @param accuracyField text field for entering accuracy
      */
-    public void resetAllFields(JComboBox typingStyleBox, JComboBox keyboardBox, JTextField symbolBox, JColorChooser colourChooser, JComboBox accessoryBox, JTextField nameField){
+    public void resetAllFields(JComboBox typingStyleBox, JComboBox keyboardBox, JTextField symbolBox, JColorChooser colourChooser, JComboBox accessoryBox, JTextField nameField, JTextField accuracyField){
         typingStyleBox.setSelectedIndex(0);
         keyboardBox.setSelectedIndex(0);
         symbolBox.setText("");
         colourChooser.setColor(Color.WHITE);
         accessoryBox.setSelectedIndex(0);
         nameField.setText("");
+        accuracyField.setText("");
     }
 
     /**
      * Displays text area to enter typist's name.
+     * 
+     * @param customisePanel container panel
      */
     private JTextField enterTypistName(JPanel customisePanel){
         JPanel namePanel = new JPanel();
@@ -351,6 +372,29 @@ public class RaceConfigGUI
         namePanel.add(nameField);
         customisePanel.add(namePanel);
         return nameField;
+    }
+
+    /** 
+     * Displays text field for entering typist's accuracy
+    */
+    private JTextField chooseAccuracy(JPanel customisePanel){
+        JPanel accuracyPanel = new JPanel();
+        accuracyPanel.setOpaque(false);
+        BoxLayout boxLayout = new BoxLayout(accuracyPanel, BoxLayout.Y_AXIS);
+        accuracyPanel.setLayout(boxLayout);
+
+        JLabel accuracyLabel = new JLabel("Choose your accuracy");
+        accuracyLabel.setBorder(new EmptyBorder(10,0,10,0));
+        accuracyLabel.setFont(new Font("Arial", Font.PLAIN, 15));
+        accuracyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        accuracyPanel.add(accuracyLabel);
+
+        JTextField accuracyField = new JTextField(5);
+        accuracyField.setMaximumSize(accuracyField.getPreferredSize());
+        accuracyField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        accuracyPanel.add(accuracyField);
+        customisePanel.add(accuracyPanel);
+        return accuracyField;
     }
 
     /**
@@ -508,6 +552,6 @@ public class RaceConfigGUI
     public static void main(String[] args)
     {
         RaceConfigGUI race = new RaceConfigGUI();
-        race.showRaceConfig();
+        race.startRaceGUI();
     }
 }
